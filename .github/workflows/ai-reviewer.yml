@@ -1,0 +1,65 @@
+name: AI PR Reviewer
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+# Least privilege: read the code, write review comments, nothing else.
+permissions:
+  contents: read
+  pull-requests: write
+
+# A force-push should cancel the review of the commit it replaced.
+concurrency:
+  group: ai-reviewer-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    name: Review pull request
+    runs-on: ubuntu-latest
+    # Fork PRs get a read-only GITHUB_TOKEN and no access to secrets, so the
+    # review would fail when it tried to post. Skip them explicitly.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Unit tests (sanitizer + validator)
+        run: npm run test:unit
+
+      - name: Build
+        run: npm run build
+
+      - name: Review the diff
+        run: node dist/index.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Review configuration. Mirrors the Rule Configuration screen in the
+          # dashboard; every value has a safe default in src/index.ts.
+          REVIEW_STRICTNESS: balanced
+          REVIEW_ENFORCE_SECURITY: 'true'
+          REVIEW_MIN_CONFIDENCE: '0.6'
+          REVIEW_MAX_COMMENTS: '25'
+          REVIEW_SEVERITIES: |
+            security
+            bug
+            optimization
+            nit
+          REVIEW_MAX_DIFF_CHARS: '180000'
+          # Set to `security` or `bug` to turn findings into a red check.
+          REVIEW_FAIL_ON_SEVERITY: none

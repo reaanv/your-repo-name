@@ -1,0 +1,16 @@
+.tokensave
+
+node_modules/
+dist/
+.next/
+out/
+.vercel/
+test-results/
+playwright-report/
+blob-report/
+*.tsbuildinfo
+.DS_Store
+.env
+.env.*
+!.env.example
+npm-debug.log*

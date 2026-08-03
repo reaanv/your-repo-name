@@ -1,0 +1,100 @@
+name: 'Autonomous PR Code Reviewer'
+description: 'Fetches a PR diff, redacts secrets, reviews it with Claude, and posts validated inline comments.'
+author: 'Autonomous PR Reviewer'
+
+branding:
+  icon: 'check-circle'
+  color: 'purple'
+
+inputs:
+  github-token:
+    description: 'Token used to read the diff and post review comments.'
+    required: true
+    default: ${{ github.token }}
+  anthropic-api-key:
+    description: 'Anthropic API key used for the review call.'
+    required: true
+  strictness:
+    description: 'lenient | balanced | strict'
+    required: false
+    default: 'balanced'
+  enforce-security-checks:
+    description: 'Require an explicit security pass over every changed file.'
+    required: false
+    default: 'true'
+  min-confidence:
+    description: 'Drop findings the model is less confident about than this (0–1).'
+    required: false
+    default: '0.6'
+  max-comments:
+    description: 'Maximum number of comments to post on a single review.'
+    required: false
+    default: '25'
+  severities:
+    description: 'Newline- or semicolon-separated list of severities to post.'
+    required: false
+    default: |
+      security
+      bug
+      optimization
+      nit
+  custom-rules:
+    description: 'Newline- or semicolon-separated repository-specific review rules.'
+    required: false
+    default: ''
+  fail-on-severity:
+    description: 'Fail the check when a finding at or above this severity is found. none | security | bug | optimization | nit'
+    required: false
+    default: 'none'
+  max-diff-chars:
+    description: 'Character budget for the sanitized diff sent to the model.'
+    required: false
+    default: '180000'
+  dry-run:
+    description: 'Run the full pipeline but print the review instead of posting it.'
+    required: false
+    default: 'false'
+
+outputs:
+  findings:
+    description: 'Number of findings posted.'
+    value: ${{ steps.review.outputs.findings }}
+  overall-risk:
+    description: 'low | medium | high | critical'
+    value: ${{ steps.review.outputs.overall-risk }}
+  redactions:
+    description: 'Number of secrets redacted before the payload was built.'
+    value: ${{ steps.review.outputs.redactions }}
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install and build reviewer
+      shell: bash
+      working-directory: ${{ github.action_path }}
+      run: |
+        npm ci --ignore-scripts
+        npm run build
+
+    - name: Review
+      id: review
+      shell: bash
+      working-directory: ${{ github.action_path }}
+      run: node dist/index.js
+      env:
+        INPUT_GITHUB-TOKEN: ${{ inputs.github-token }}
+        INPUT_ANTHROPIC-API-KEY: ${{ inputs.anthropic-api-key }}
+        INPUT_STRICTNESS: ${{ inputs.strictness }}
+        INPUT_ENFORCE-SECURITY-CHECKS: ${{ inputs.enforce-security-checks }}
+        INPUT_MIN-CONFIDENCE: ${{ inputs.min-confidence }}
+        INPUT_MAX-COMMENTS: ${{ inputs.max-comments }}
+        INPUT_SEVERITIES: ${{ inputs.severities }}
+        INPUT_CUSTOM-RULES: ${{ inputs.custom-rules }}
+        INPUT_FAIL-ON-SEVERITY: ${{ inputs.fail-on-severity }}
+        INPUT_MAX-DIFF-CHARS: ${{ inputs.max-diff-chars }}
+        INPUT_DRY-RUN: ${{ inputs.dry-run }}

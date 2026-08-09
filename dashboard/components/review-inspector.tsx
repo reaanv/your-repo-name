@@ -3,6 +3,7 @@
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react';
 import {
   Braces,
+  CircleHelp,
   ExternalLink,
   FileDiff,
   GitBranch,
@@ -17,6 +18,7 @@ import type { Finding, PullRequestReview } from '@/lib/types';
 import { cn, formatCompact, timeAgo } from '@/lib/utils';
 
 import { RiskBadge, SeverityBadge, StatusBadge } from './ui/badge';
+import { Tooltip } from './ui/tooltip';
 
 type Tab = 'findings' | 'diff' | 'json';
 
@@ -84,8 +86,8 @@ export function ReviewInspector({
       //
       // Every Tab is driven from this list rather than letting the browser's own
       // sequential order run and only correcting at the two ends. Engines do not
-      // agree on what that order contains — Gecko and WebKit place scrollable
-      // regions in it, and none of them promise it matches DOM order — so a trap
+      // agree on what that order contains. Gecko and WebKit place scrollable
+      // regions in it, and none of them promise it matches DOM order, so a trap
       // that only fires when `activeElement` is the DOM-first or DOM-last node
       // leaks at exactly the point where the two orders diverge. That is not
       // hypothetical: WebKit escaped this dialog on the first Shift+Tab while
@@ -157,7 +159,7 @@ export function ReviewInspector({
         aria-label="Dismiss inspector"
         data-testid="inspector-backdrop"
         onClick={onClose}
-        className="absolute inset-0 bg-ink-950/80 backdrop-blur-sm"
+        className="absolute inset-0 bg-surface-base/80 backdrop-blur-sm"
       />
 
       <div
@@ -165,12 +167,12 @@ export function ReviewInspector({
         role="dialog"
         aria-modal="true"
         aria-label={`Review for pull request ${review.number}`}
-        className="glass relative flex h-[92vh] w-full max-w-6xl animate-scale-in flex-col overflow-hidden sm:h-[86vh]"
+        className="surface relative flex h-[92vh] w-full max-w-6xl animate-scale-in flex-col overflow-hidden sm:h-[86vh]"
       >
-        <header className="flex items-start gap-4 border-b border-white/[0.07] px-5 py-4 sm:px-6">
+        <header className="flex items-start gap-4 border-b border-line-default px-5 py-4 sm:px-6">
           <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2 text-xs text-slate-400">
-              <span className="font-mono text-slate-300">{review.repo}</span>
+            <div className="flex flex-wrap items-center gap-2 text-xs text-content-secondary">
+              <span className="font-mono text-content-secondary">{review.repo}</span>
               <span aria-hidden>·</span>
               <span data-testid="inspector-pr-number" className="font-mono text-accent-soft">
                 #{review.number}
@@ -182,21 +184,21 @@ export function ReviewInspector({
               </span>
             </div>
 
-            <h2 data-testid="inspector-title" className="mt-1.5 text-balance text-lg font-semibold text-white">
+            <h2 data-testid="inspector-title" className="mt-1.5 text-balance text-lg font-semibold text-content-primary">
               {review.title}
             </h2>
 
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <StatusBadge status={review.status} />
               <RiskBadge risk={review.risk} />
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1 text-xs text-slate-300">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-line-default bg-surface-overlay/50 px-2.5 py-1 text-xs text-content-secondary">
                 <Timer aria-hidden className="h-3.5 w-3.5" />
                 {review.durationMs > 0 ? `${(review.durationMs / 1000).toFixed(1)}s` : 'in progress'}
               </span>
               {review.redactions > 0 ? (
                 <span
                   data-testid="inspector-redactions"
-                  className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/25 bg-emerald-500/10 px-2.5 py-1 text-xs text-emerald-200"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-state-success/25 bg-state-success/10 px-2.5 py-1 text-xs text-state-success"
                 >
                   <ShieldCheck aria-hidden className="h-3.5 w-3.5" />
                   {review.redactions} secret{review.redactions === 1 ? '' : 's'} redacted
@@ -211,7 +213,7 @@ export function ReviewInspector({
             aria-label="Close inspector"
             data-testid="inspector-close"
             onClick={onClose}
-            className="shrink-0 rounded-lg border border-white/10 p-2 text-slate-400 transition hover:bg-white/[0.07] hover:text-white"
+            className="shrink-0 rounded-lg border border-line-default p-2 text-content-secondary transition hover:bg-surface-overlay hover:text-content-primary"
           >
             <X aria-hidden className="h-4 w-4" />
           </button>
@@ -222,7 +224,7 @@ export function ReviewInspector({
           aria-label="Inspector sections"
           data-testid="inspector-tabs"
           onKeyDown={onTabsKeyDown}
-          className="flex gap-1 border-b border-white/[0.07] px-4 sm:px-6"
+          className="flex gap-1 border-b border-line-default px-4 sm:px-6"
         >
           {TABS.map(({ id, label, icon: Icon }, index) => {
             const active = tab === id;
@@ -244,14 +246,14 @@ export function ReviewInspector({
                 className={cn(
                   '-mb-px flex items-center gap-2 border-b-2 px-3 py-3 text-sm transition',
                   active
-                    ? 'border-accent text-white'
-                    : 'border-transparent text-slate-400 hover:text-slate-200',
+                    ? 'border-accent text-content-primary'
+                    : 'border-transparent text-content-secondary hover:text-content-primary',
                 )}
               >
                 <Icon aria-hidden className="h-4 w-4" />
                 {label}
                 {id === 'findings' ? (
-                  <span className="rounded-md bg-white/[0.07] px-1.5 py-0.5 font-mono text-[0.7rem] text-slate-300">
+                  <span className="rounded-md bg-surface-overlay px-1.5 py-0.5 text-[0.7rem] tabular-nums text-content-secondary">
                     {review.findings.length}
                   </span>
                 ) : null}
@@ -273,19 +275,19 @@ export function ReviewInspector({
           {tab === 'json' ? <JsonPanel review={review} /> : null}
         </div>
 
-        <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.07] px-5 py-3 text-xs text-slate-500 sm:px-6">
+        <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-line-default px-5 py-3 text-xs text-content-tertiary sm:px-6">
           <span>
             {review.filesChanged} file{review.filesChanged === 1 ? '' : 's'} ·{' '}
-            <span className="text-emerald-300">+{review.additions}</span>{' '}
-            <span className="text-rose-300">−{review.deletions}</span> · reviewed {timeAgo(review.createdAt)}
+            <span className="text-state-success">+{review.additions}</span>{' '}
+            <span className="text-state-danger">−{review.deletions}</span> · reviewed {timeAgo(review.createdAt)}
           </span>
           <span className="inline-flex items-center gap-3">
-            <span className="font-mono">
+            <span className="tabular-nums">
               {formatCompact(review.tokens.input)} in / {formatCompact(review.tokens.output)} out
             </span>
             <span
               data-testid="inspector-open-github"
-              className="inline-flex items-center gap-1 text-slate-400"
+              className="inline-flex items-center gap-1 text-content-secondary"
             >
               <ExternalLink aria-hidden className="h-3 w-3" />
               {review.repo}#{review.number}
@@ -300,19 +302,39 @@ export function ReviewInspector({
 function FindingsPanel({ review }: { review: PullRequestReview }) {
   if (review.findings.length === 0) {
     return (
-      <div data-testid="inspector-empty" className="glass-soft px-5 py-10 text-center">
-        <ShieldCheck aria-hidden className="mx-auto h-8 w-8 text-emerald-300" />
-        <p className="mt-3 text-sm font-medium text-white">No findings on this diff</p>
-        <p className="mx-auto mt-1.5 max-w-md text-xs leading-relaxed text-slate-400">{review.summary}</p>
+      <div data-testid="inspector-empty" className="surface-quiet px-5 py-10 text-center">
+        <ShieldCheck aria-hidden className="mx-auto h-8 w-8 text-state-success" />
+        <p className="mt-3 text-sm font-medium text-content-primary">No findings on this diff</p>
+        <p className="mx-auto mt-1.5 max-w-md text-xs leading-relaxed text-content-secondary">{review.summary}</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      <div className="glass-soft p-4">
+      <div className="surface-quiet p-4">
         <p className="panel-title">Model summary</p>
-        <p className="mt-2 text-sm leading-relaxed text-slate-300">{review.summary}</p>
+        <p className="mt-2 text-sm leading-relaxed text-content-secondary">{review.summary}</p>
+      </div>
+
+      {/*
+        Confidence is explained once here rather than on each card. The wording
+        is identical for every finding, so a tooltip per card would repeat the
+        same sentence into a screen reader and add one tab stop per finding for
+        no extra information.
+      */}
+      <div className="flex items-baseline justify-between gap-3">
+        <p className="panel-title">Findings</p>
+        <Tooltip label="How sure the model is that a finding is real. Anything below the configured minimum is dropped before the review is posted.">
+          <button
+            type="button"
+            data-testid="confidence-explainer"
+            className="inline-flex items-center gap-1.5 rounded-md text-xs text-content-tertiary transition-colors hover:text-content-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
+          >
+            <CircleHelp aria-hidden className="h-3.5 w-3.5" />
+            About confidence
+          </button>
+        </Tooltip>
       </div>
 
       <ul data-testid="inspector-findings" className="space-y-3">
@@ -333,30 +355,43 @@ function FindingCard({ finding, compact = false }: { finding: Finding; compact?:
       data-finding-id={finding.id}
       data-severity={finding.severity}
       className={cn(
-        'rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 transition hover:border-white/[0.16]',
-        compact && 'bg-white/[0.04]',
+        'rounded-xl border border-line-default bg-surface-overlay/30 p-4 transition hover:border-line-strong',
+        compact && 'bg-surface-overlay/50',
       )}
     >
       <div className="flex flex-wrap items-center gap-2">
         <SeverityBadge severity={finding.severity} />
-        <span className="font-mono text-xs text-slate-400">
+        <span className="font-mono text-xs text-content-secondary">
           {finding.path}
           {finding.line !== null ? `:${finding.line}` : ''}
         </span>
-        <span className="ml-auto font-mono text-xs text-slate-500">
+        <span className="ml-auto tabular-nums text-xs text-content-tertiary">
           {(finding.confidence * 100).toFixed(0)}% confident
         </span>
       </div>
 
-      <h3 className="mt-2.5 text-sm font-semibold text-white">{finding.title}</h3>
-      <p className="mt-1.5 text-sm leading-relaxed text-slate-400">{finding.body}</p>
+      <h3 className="mt-2.5 text-sm font-semibold text-content-primary">{finding.title}</h3>
+      <p className="mt-1.5 text-sm leading-relaxed text-content-secondary">{finding.body}</p>
 
       {finding.suggestion ? (
         <div className="mt-3">
-          <p className="mb-1.5 text-[0.7rem] font-medium uppercase tracking-[0.12em] text-emerald-300/80">
+          <p className="mb-1.5 text-[0.7rem] font-medium uppercase tracking-[0.12em] text-state-success/80">
             Suggested change
           </p>
-          <pre className="scrollbar-slim overflow-x-auto rounded-lg border border-emerald-400/20 bg-emerald-500/[0.06] p-3 font-mono text-xs leading-relaxed text-emerald-100">
+          {/*
+            A container that scrolls sideways needs to be focusable, or the
+            content past its right edge is reachable with a mouse and a touch
+            drag but not with a keyboard. Firefox focuses scroll containers on
+            its own; Chrome and Safari do not, so `tabIndex` has to be explicit.
+            `role="region"` plus a label is what keeps the new tab stop from
+            landing on something a screen reader announces as nothing at all.
+          */}
+          <pre
+            tabIndex={0}
+            role="region"
+            aria-label={`Suggested change for ${finding.title}`}
+            className="scrollbar-slim overflow-x-auto rounded-lg border border-state-success/20 bg-state-success/[0.06] p-3 font-mono text-xs leading-relaxed text-state-success focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
+          >
             <code>{finding.suggestion}</code>
           </pre>
         </div>
@@ -385,22 +420,30 @@ function DiffPanel({ review }: { review: PullRequestReview }) {
   return (
     <div className="space-y-5">
       {files.map((file) => (
-        <section key={file.path} data-testid="diff-file" data-path={file.path} className="glass-soft overflow-hidden">
-          <header className="flex flex-wrap items-center gap-2 border-b border-white/[0.07] px-4 py-2.5">
-            <FileDiff aria-hidden className="h-4 w-4 text-slate-500" />
-            <span className="font-mono text-xs text-slate-200">{file.path}</span>
-            <span className="ml-auto font-mono text-xs">
-              <span className="text-emerald-300">+{file.additions}</span>{' '}
-              <span className="text-rose-300">−{file.deletions}</span>
+        <section key={file.path} data-testid="diff-file" data-path={file.path} className="surface-quiet overflow-hidden">
+          <header className="flex flex-wrap items-center gap-2 border-b border-line-default px-4 py-2.5">
+            <FileDiff aria-hidden className="h-4 w-4 text-content-tertiary" />
+            <span className="font-mono text-xs text-content-primary">{file.path}</span>
+            <span className="ml-auto tabular-nums text-xs">
+              <span className="text-state-success">+{file.additions}</span>{' '}
+              <span className="text-state-danger">−{file.deletions}</span>
             </span>
           </header>
 
-          <div className="scrollbar-slim overflow-x-auto">
+          {/* Focusable for the same reason as the suggestion block above. This
+              one matters most: on a phone the diff runs about 400px past the
+              right edge, so without it half of every changed line is off. */}
+          <div
+            tabIndex={0}
+            role="region"
+            aria-label={`Diff for ${file.path}`}
+            className="scrollbar-slim overflow-x-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/60"
+          >
             <table className="w-full border-collapse font-mono text-xs">
               <tbody>
                 {file.hunks.flatMap((hunk, hunkIndex) => [
-                  <tr key={`h-${hunkIndex}`} data-testid="diff-hunk-header" className="bg-white/[0.04]">
-                    <td colSpan={3} className="px-3 py-1.5 text-[0.7rem] text-slate-500">
+                  <tr key={`h-${hunkIndex}`} data-testid="diff-hunk-header" className="bg-surface-overlay/50">
+                    <td colSpan={3} className="px-3 py-1.5 text-[0.7rem] text-content-tertiary">
                       {hunk.header}
                     </td>
                   </tr>,
@@ -414,23 +457,23 @@ function DiffPanel({ review }: { review: PullRequestReview }) {
                         data-testid="diff-line"
                         data-line-type={line.type}
                         className={cn(
-                          line.type === 'add' && 'bg-emerald-500/[0.08]',
-                          line.type === 'del' && 'bg-rose-500/[0.08]',
+                          line.type === 'add' && 'bg-state-success/[0.08]',
+                          line.type === 'del' && 'bg-state-danger/[0.08]',
                         )}
                       >
-                        <td className="w-12 select-none border-r border-white/[0.05] px-2 py-0.5 text-right text-slate-600">
+                        <td className="w-12 select-none border-r border-line-subtle px-2 py-0.5 text-right text-content-muted">
                           {line.oldNumber ?? ''}
                         </td>
-                        <td className="w-12 select-none border-r border-white/[0.05] px-2 py-0.5 text-right text-slate-600">
+                        <td className="w-12 select-none border-r border-line-subtle px-2 py-0.5 text-right text-content-muted">
                           {line.newNumber ?? ''}
                         </td>
                         <td
                           className={cn(
                             'whitespace-pre px-3 py-0.5',
-                            line.type === 'add' && 'text-emerald-100',
-                            line.type === 'del' && 'text-rose-100',
-                            line.type === 'context' && 'text-slate-400',
-                            line.type === 'meta' && 'text-slate-600',
+                            line.type === 'add' && 'text-state-success',
+                            line.type === 'del' && 'text-state-danger',
+                            line.type === 'context' && 'text-content-secondary',
+                            line.type === 'meta' && 'text-content-muted',
                           )}
                         >
                           {line.type === 'add' ? '+' : line.type === 'del' ? '-' : ' '}
@@ -463,9 +506,9 @@ function DiffPanel({ review }: { review: PullRequestReview }) {
       ))}
 
       {orphans.length > 0 ? (
-        <section data-testid="diff-orphans" className="glass-soft p-4">
+        <section data-testid="diff-orphans" className="surface-quiet p-4">
           <p className="panel-title">Findings without a diff anchor</p>
-          <p className="mt-1.5 text-xs text-slate-500">
+          <p className="mt-1.5 text-xs text-content-tertiary">
             These lines are not part of this diff, so the Action reports them in the review body instead of inline.
           </p>
           <div className="mt-3 space-y-2">
@@ -496,13 +539,16 @@ function JsonPanel({ review }: { review: PullRequestReview }) {
 
   return (
     <div className="space-y-3">
-      <p className="text-xs leading-relaxed text-slate-500">
+      <p className="text-xs leading-relaxed text-content-tertiary">
         The exact structured payload the model returned, after Zod validation. A response that fails this schema
         is rejected and nothing is posted to the pull request.
       </p>
       <pre
         data-testid="inspector-json"
-        className="scrollbar-slim overflow-x-auto rounded-xl border border-white/[0.08] bg-ink-950/60 p-4 font-mono text-xs leading-relaxed text-slate-300"
+        tabIndex={0}
+        role="region"
+        aria-label="Raw model payload"
+        className="scrollbar-slim overflow-x-auto rounded-xl border border-line-default bg-surface-base/60 p-4 font-mono text-xs leading-relaxed text-content-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
       >
         <code>{JSON.stringify(payload, null, 2)}</code>
       </pre>

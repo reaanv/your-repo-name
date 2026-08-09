@@ -1,6 +1,6 @@
 import { NOW } from './mock-data';
 
-/** Tiny classnames joiner — the whole of `clsx` we actually need. */
+/** Tiny classnames joiner: the whole of `clsx` we actually need. */
 export function cn(...values: Array<string | false | null | undefined>): string {
   return values.filter(Boolean).join(' ');
 }

@@ -27,14 +27,14 @@ export function Switch({
     // switch carries the accessible name instead.
     <div
       className={cn(
-        'group flex items-start justify-between gap-6 rounded-xl border border-white/[0.06] bg-white/[0.015] p-4 transition',
-        disabled ? 'opacity-50' : 'hover:border-white/15 hover:bg-white/[0.04]',
+        'group flex items-start justify-between gap-6 rounded-xl border border-line-subtle bg-surface-overlay/30 p-4 transition',
+        disabled ? 'opacity-50' : 'hover:border-line-strong hover:bg-surface-overlay/50',
       )}
     >
       <span className="min-w-0">
-        <span className="block text-sm font-medium text-slate-100">{label}</span>
+        <span className="block text-sm font-medium text-content-primary">{label}</span>
         {description ? (
-          <span id={descriptionId} className="mt-1 block text-xs leading-relaxed text-slate-400">
+          <span id={descriptionId} className="mt-1 block text-xs leading-relaxed text-content-secondary">
             {description}
           </span>
         ) : null}
@@ -55,8 +55,8 @@ export function Switch({
         className={cn(
           'relative mt-0.5 h-6 w-11 shrink-0 rounded-full border transition-colors duration-200',
           checked
-            ? 'border-accent/60 bg-accent/80 shadow-glow'
-            : 'border-white/15 bg-white/[0.06]',
+            ? 'border-accent/60 bg-accent/80 shadow-ring'
+            : 'border-line-strong bg-surface-overlay',
           disabled && 'pointer-events-none',
         )}
       >

@@ -3,6 +3,8 @@ import { ArrowDownRight, ArrowUpRight, Minus } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 
+import { CountUpValue } from './count-up-value';
+
 export interface StatCardProps {
   label: string;
   value: string;
@@ -11,16 +13,20 @@ export interface StatCardProps {
   /** `true` when a rising number is a bad thing (e.g. open findings). */
   invertDelta?: boolean;
   icon: LucideIcon;
-  accent?: 'violet' | 'emerald' | 'rose' | 'sky' | 'amber';
+  /**
+   * What the figure *means*, not what colour to paint it. The palette decides
+   * the pigment; callers never name one.
+   */
+  tone?: 'brand' | 'success' | 'danger' | 'info' | 'warning';
   testId: string;
 }
 
-const ACCENTS: Record<NonNullable<StatCardProps['accent']>, string> = {
-  violet: 'border-accent/30 bg-accent/12 text-accent-soft',
-  emerald: 'border-emerald-400/25 bg-emerald-500/10 text-emerald-200',
-  rose: 'border-rose-400/25 bg-rose-500/10 text-rose-200',
-  sky: 'border-sky-400/25 bg-sky-500/10 text-sky-200',
-  amber: 'border-amber-400/25 bg-amber-500/10 text-amber-200',
+const TONES: Record<NonNullable<StatCardProps['tone']>, string> = {
+  brand: 'border-accent/30 bg-accent/10 text-accent',
+  success: 'border-state-success/25 bg-state-success/10 text-state-success',
+  danger: 'border-state-danger/25 bg-state-danger/10 text-state-danger',
+  info: 'border-state-info/25 bg-state-info/10 text-state-info',
+  warning: 'border-state-warning/25 bg-state-warning/10 text-state-warning',
 };
 
 export function StatCard({
@@ -30,7 +36,7 @@ export function StatCard({
   delta,
   invertDelta = false,
   icon: Icon,
-  accent = 'violet',
+  tone = 'brand',
   testId,
 }: StatCardProps) {
   const good = delta === undefined ? null : invertDelta ? delta <= 0 : delta >= 0;
@@ -40,19 +46,20 @@ export function StatCard({
     <article
       data-testid={testId}
       data-stat-card="true"
-      className="glass group relative overflow-hidden p-5 transition duration-300 hover:border-white/20"
+      className={cn(
+        'motion-item surface group p-5',
+        'transition-colors duration-200 hover:border-line-strong hover:bg-surface-overlay',
+      )}
     >
-      <div className="pointer-events-none absolute inset-x-0 -top-24 h-32 bg-gradient-to-b from-white/[0.06] to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-
       <div className="flex items-start justify-between gap-4">
-        <p className="text-xs font-medium uppercase tracking-[0.12em] text-slate-400">{label}</p>
-        <span className={cn('grid h-9 w-9 shrink-0 place-items-center rounded-xl border', ACCENTS[accent])}>
+        <p className="text-xs font-medium uppercase tracking-[0.12em] text-content-secondary">{label}</p>
+        <span className={cn('grid h-9 w-9 shrink-0 place-items-center rounded-xl border', TONES[tone])}>
           <Icon aria-hidden className="h-4 w-4" />
         </span>
       </div>
 
-      <p data-testid={`${testId}-value`} className="mt-4 font-mono text-3xl font-semibold tracking-tight text-white">
-        {value}
+      <p className="mt-4 text-3xl font-semibold tabular-nums tracking-tight text-content-primary">
+        <CountUpValue value={value} testId={`${testId}-value`} />
       </p>
 
       <div className="mt-2 flex items-center gap-2 text-xs">
@@ -60,12 +67,12 @@ export function StatCard({
           <span
             data-testid={`${testId}-delta`}
             className={cn(
-              'inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 font-medium',
+              'inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 font-medium tabular-nums',
               good === null
-                ? 'text-slate-400'
+                ? 'text-content-secondary'
                 : good
-                  ? 'bg-emerald-500/10 text-emerald-300'
-                  : 'bg-rose-500/10 text-rose-300',
+                  ? 'bg-state-success/10 text-state-success'
+                  : 'bg-state-danger/10 text-state-danger',
             )}
           >
             <DeltaIcon aria-hidden className="h-3 w-3" />
@@ -73,7 +80,7 @@ export function StatCard({
             {delta}
           </span>
         ) : null}
-        {hint ? <span className="truncate text-slate-500">{hint}</span> : null}
+        {hint ? <span className="truncate text-content-tertiary">{hint}</span> : null}
       </div>
     </article>
   );

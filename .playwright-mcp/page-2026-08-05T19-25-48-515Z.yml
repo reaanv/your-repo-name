@@ -1,0 +1,271 @@
+- generic [ref=e2]:
+  - complementary "Site navigation" [ref=e3]:
+    - generic [ref=e9]:
+      - generic [ref=e10]: PR Reviewer
+      - generic [ref=e11]: Agentic CI/CD
+    - navigation "Primary" [ref=e12]:
+      - link "Dashboard" [ref=e13] [cursor=pointer]:
+        - /url: /
+      - link "PR Reviews" [ref=e20] [cursor=pointer]:
+        - /url: /reviews
+      - link "Analytics" [ref=e26] [cursor=pointer]:
+        - /url: /analytics
+      - link "Rule Configuration" [ref=e30] [cursor=pointer]:
+        - /url: /rules
+      - link "Settings" [ref=e33] [cursor=pointer]:
+        - /url: /settings
+    - generic [ref=e39]:
+      - paragraph [ref=e40]: Fail-closed pipeline
+      - paragraph [ref=e41]: Diffs are redacted before they leave the runner, and a schema violation blocks the review instead of posting it.
+  - generic [ref=e42]:
+    - banner [ref=e43]:
+      - generic [ref=e44]:
+        - heading "Dashboard" [level=1] [ref=e45]
+        - generic [ref=e46]: Agent online
+        - generic [ref=e48]:
+          - generic [ref=e49]: Synced 1m ago
+          - button "Sync now" [ref=e50] [cursor=pointer]
+          - button "Account menu" [ref=e58] [cursor=pointer]
+    - main [ref=e62]:
+      - generic [ref=e63]:
+        - generic [ref=e65]:
+          - generic [ref=e66]:
+            - generic [ref=e67]: Fail-closed by design
+            - heading "Every pull request, reviewed before a human opens it." [level=2] [ref=e71]
+            - paragraph [ref=e72]: The action redacts secrets on the runner, sends only sanitized diffs to the model, validates the structured response against a schema, and posts inline comments anchored to real lines. Nothing is posted unless the payload parses.
+          - generic [ref=e73]:
+            - generic [ref=e74]:
+              - term [ref=e75]: Secrets redacted
+              - definition [ref=e76]: "4"
+            - generic [ref=e77]:
+              - term [ref=e78]: Auto-resolved
+              - definition [ref=e79]: 63%
+        - generic [ref=e80]:
+          - article [ref=e81]:
+            - paragraph [ref=e83]: Reviews today
+            - paragraph [ref=e89]: "14"
+            - generic [ref=e90]:
+              - generic [ref=e91]: "+3"
+              - generic [ref=e95]: 14 in the last 7 days
+          - article [ref=e96]:
+            - paragraph [ref=e98]: Open findings
+            - paragraph [ref=e109]: "25"
+            - generic [ref=e110]:
+              - generic [ref=e111]: "-6"
+              - generic [ref=e115]: 6 security
+          - article [ref=e116]:
+            - paragraph [ref=e118]: Code health
+            - paragraph [ref=e123]: 88/100
+            - generic [ref=e124]:
+              - generic [ref=e125]: "+10"
+              - generic [ref=e129]: vs last week
+          - article [ref=e130]:
+            - paragraph [ref=e132]: Median review time
+            - paragraph [ref=e137]: 19s
+            - generic [ref=e138]:
+              - generic [ref=e139]: "-9"
+              - generic [ref=e143]: wall clock, per PR
+        - generic [ref=e144]:
+          - heading "Review pipeline" [level=2] [ref=e145]
+          - list [ref=e146]:
+            - listitem [ref=e147]:
+              - generic [ref=e148]: Step 1 of 5
+              - paragraph [ref=e155]: Fetch diff
+              - paragraph [ref=e156]: Octokit pulls the unified diff for the PR head against its base.
+            - listitem [ref=e157]:
+              - generic [ref=e158]: Step 2 of 5
+              - paragraph [ref=e166]: Sanitize
+              - paragraph [ref=e167]: 16 redaction rules strip keys, tokens, and PEM blocks. Then the diff is budget-truncated.
+            - listitem [ref=e168]:
+              - generic [ref=e169]: Step 3 of 5
+              - paragraph [ref=e179]: Analyze
+              - paragraph [ref=e180]: Claude Opus 5 reviews the diff as untrusted data, with adaptive thinking enabled.
+            - listitem [ref=e181]:
+              - generic [ref=e182]: Step 4 of 5
+              - paragraph [ref=e188]: Validate
+              - paragraph [ref=e189]: Zod gates the response. A schema violation fails the run instead of posting.
+            - listitem [ref=e190]:
+              - generic [ref=e191]: Step 5 of 5
+              - paragraph [ref=e197]: Post
+              - paragraph [ref=e198]: Anchorable findings become inline comments; the rest fall back to the review body.
+        - generic [ref=e199]:
+          - generic [ref=e200]:
+            - generic [ref=e202]:
+              - heading "Code health, last 30 days" [level=2] [ref=e203]
+              - paragraph [ref=e204]: Composite of finding density, severity mix, and resolution rate.
+            - figure "Jul 5 now 88/100 Aug 3" [ref=e205]:
+              - img "Code health score over the last 30 days, currently 88 out of 100" [ref=e206]:
+                - 'generic "Jul 5: 66/100" [ref=e209]'
+                - 'generic "Jul 6: 59/100" [ref=e210]'
+                - 'generic "Jul 7: 68/100" [ref=e211]'
+                - 'generic "Jul 8: 68/100" [ref=e212]'
+                - 'generic "Jul 9: 63/100" [ref=e213]'
+                - 'generic "Jul 10: 64/100" [ref=e214]'
+                - 'generic "Jul 11: 66/100" [ref=e215]'
+                - 'generic "Jul 12: 72/100" [ref=e216]'
+                - 'generic "Jul 13: 71/100" [ref=e217]'
+                - 'generic "Jul 14: 72/100" [ref=e218]'
+                - 'generic "Jul 15: 71/100" [ref=e219]'
+                - 'generic "Jul 16: 70/100" [ref=e220]'
+                - 'generic "Jul 17: 70/100" [ref=e221]'
+                - 'generic "Jul 18: 75/100" [ref=e222]'
+                - 'generic "Jul 19: 78/100" [ref=e223]'
+                - 'generic "Jul 20: 78/100" [ref=e224]'
+                - 'generic "Jul 21: 75/100" [ref=e225]'
+                - 'generic "Jul 22: 78/100" [ref=e226]'
+                - 'generic "Jul 23: 74/100" [ref=e227]'
+                - 'generic "Jul 24: 69/100" [ref=e228]'
+                - 'generic "Jul 25: 84/100" [ref=e229]'
+                - 'generic "Jul 26: 83/100" [ref=e230]'
+                - 'generic "Jul 27: 78/100" [ref=e231]'
+                - 'generic "Jul 28: 81/100" [ref=e232]'
+                - 'generic "Jul 29: 85/100" [ref=e233]'
+                - 'generic "Jul 30: 85/100" [ref=e234]'
+                - 'generic "Jul 31: 87/100" [ref=e235]'
+                - 'generic "Aug 1: 88/100" [ref=e236]'
+                - 'generic "Aug 2: 91/100" [ref=e237]'
+                - 'generic "Aug 3: 88/100" [ref=e238]'
+              - generic [ref=e239]:
+                - generic [ref=e240]: Jul 5
+                - generic [ref=e241]: now 88/100
+                - generic [ref=e242]: Aug 3
+          - generic [ref=e243]:
+            - generic [ref=e245]:
+              - heading "Top issue categories" [level=2] [ref=e246]
+              - paragraph [ref=e247]: What the reviewer catches most often.
+            - list [ref=e248]:
+              - listitem [ref=e249]:
+                - generic [ref=e250]:
+                  - generic [ref=e251]: Unvalidated user input
+                  - generic [ref=e252]: "110"
+              - listitem [ref=e255]:
+                - generic [ref=e256]:
+                  - generic [ref=e257]: Missing null / undefined guard
+                  - generic [ref=e258]: "96"
+              - listitem [ref=e261]:
+                - generic [ref=e262]:
+                  - generic [ref=e263]: Unhandled promise rejection
+                  - generic [ref=e264]: "87"
+              - listitem [ref=e267]:
+                - generic [ref=e268]:
+                  - generic [ref=e269]: N+1 database query
+                  - generic [ref=e270]: "78"
+              - listitem [ref=e273]:
+                - generic [ref=e274]:
+                  - generic [ref=e275]: Hardcoded credential
+                  - generic [ref=e276]: "62"
+              - listitem [ref=e279]:
+                - generic [ref=e280]:
+                  - generic [ref=e281]: Missing dependency array
+                  - generic [ref=e282]: "57"
+        - generic [ref=e285]:
+          - generic [ref=e286]:
+            - generic [ref=e287]:
+              - heading "Live audit log" [level=2] [ref=e290]
+              - generic [ref=e291]: "6"
+            - group "Filter by severity" [ref=e292]:
+              - button "All" [pressed] [ref=e293] [cursor=pointer]
+              - button "Security6" [ref=e294] [cursor=pointer]
+              - button "Bug7" [ref=e295] [cursor=pointer]
+              - button "Optimization8" [ref=e296] [cursor=pointer]
+              - button "Nit4" [ref=e297] [cursor=pointer]
+          - generic [ref=e298]:
+            - button "Add session refresh and admin impersonation acme/atlas-api#4821 Changes requested critical risk Security 2 Bug 1 Optimization 1 dana-w · 11m ago" [ref=e299] [cursor=pointer]:
+              - generic [ref=e305]:
+                - generic [ref=e306]:
+                  - generic [ref=e307]: Add session refresh and admin impersonation
+                  - generic [ref=e308]: acme/atlas-api#4821
+                - generic [ref=e309]:
+                  - generic [ref=e310]: Changes requested
+                  - generic [ref=e313]: critical risk
+                  - generic [ref=e317]:
+                    - text: Security
+                    - generic [ref=e318]: "2"
+                  - generic [ref=e319]:
+                    - text: Bug
+                    - generic [ref=e320]: "1"
+                  - generic [ref=e321]:
+                    - text: Optimization
+                    - generic [ref=e322]: "1"
+                  - generic [ref=e323]: dana-w · 11m ago
+            - button "Introduce discount codes at checkout acme/atlas-web#2290 Changes requested high risk Bug 2 Optimization 1 Nit 1 marcus-t · 38m ago" [ref=e326] [cursor=pointer]:
+              - generic [ref=e332]:
+                - generic [ref=e333]:
+                  - generic [ref=e334]: Introduce discount codes at checkout
+                  - generic [ref=e335]: acme/atlas-web#2290
+                - generic [ref=e336]:
+                  - generic [ref=e337]: Changes requested
+                  - generic [ref=e340]: high risk
+                  - generic [ref=e344]:
+                    - text: Bug
+                    - generic [ref=e345]: "2"
+                  - generic [ref=e346]:
+                    - text: Optimization
+                    - generic [ref=e347]: "1"
+                  - generic [ref=e348]:
+                    - text: Nit
+                    - generic [ref=e349]: "1"
+                  - generic [ref=e350]: marcus-t · 38m ago
+            - button "Wire up direct-to-S3 uploads acme/atlas-api#4818 Changes requested high risk Security 2 Bug 1 Optimization 1 priya-n · 2h ago" [ref=e353] [cursor=pointer]:
+              - generic [ref=e359]:
+                - generic [ref=e360]:
+                  - generic [ref=e361]: Wire up direct-to-S3 uploads
+                  - generic [ref=e362]: acme/atlas-api#4818
+                - generic [ref=e363]:
+                  - generic [ref=e364]: Changes requested
+                  - generic [ref=e367]: high risk
+                  - generic [ref=e371]:
+                    - text: Security
+                    - generic [ref=e372]: "2"
+                  - generic [ref=e373]:
+                    - text: Bug
+                    - generic [ref=e374]: "1"
+                  - generic [ref=e375]:
+                    - text: Optimization
+                    - generic [ref=e376]: "1"
+                  - generic [ref=e377]: priya-n · 2h ago
+            - button "Paginate the activity feed acme/atlas-web#2287 Passed medium risk Bug 2 Optimization 1 sam-oduya · 2h ago" [ref=e380] [cursor=pointer]:
+              - generic [ref=e386]:
+                - generic [ref=e387]:
+                  - generic [ref=e388]: Paginate the activity feed
+                  - generic [ref=e389]: acme/atlas-web#2287
+                - generic [ref=e390]:
+                  - generic [ref=e391]: Passed
+                  - generic [ref=e395]: medium risk
+                  - generic [ref=e399]:
+                    - text: Bug
+                    - generic [ref=e400]: "2"
+                  - generic [ref=e401]:
+                    - text: Optimization
+                    - generic [ref=e402]: "1"
+                  - generic [ref=e403]: sam-oduya · 2h ago
+            - button "Add billing + search integration config acme/atlas-api#4815 Changes requested critical risk Security 2 Optimization 1 dana-w · 3h ago" [ref=e406] [cursor=pointer]:
+              - generic [ref=e412]:
+                - generic [ref=e413]:
+                  - generic [ref=e414]: Add billing + search integration config
+                  - generic [ref=e415]: acme/atlas-api#4815
+                - generic [ref=e416]:
+                  - generic [ref=e417]: Changes requested
+                  - generic [ref=e420]: critical risk
+                  - generic [ref=e424]:
+                    - text: Security
+                    - generic [ref=e425]: "2"
+                  - generic [ref=e426]:
+                    - text: Optimization
+                    - generic [ref=e427]: "1"
+                  - generic [ref=e428]: dana-w · 3h ago
+            - button "Add composite indexes for the events table acme/atlas-api#4812 Passed medium risk Optimization 1 Nit 1 lin-zhao · 4h ago" [ref=e431] [cursor=pointer]:
+              - generic [ref=e437]:
+                - generic [ref=e438]:
+                  - generic [ref=e439]: Add composite indexes for the events table
+                  - generic [ref=e440]: acme/atlas-api#4812
+                - generic [ref=e441]:
+                  - generic [ref=e442]: Passed
+                  - generic [ref=e446]: medium risk
+                  - generic [ref=e450]:
+                    - text: Optimization
+                    - generic [ref=e451]: "1"
+                  - generic [ref=e452]:
+                    - text: Nit
+                    - generic [ref=e453]: "1"
+                  - generic [ref=e454]: lin-zhao · 4h ago

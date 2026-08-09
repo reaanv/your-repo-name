@@ -270,7 +270,12 @@ async function runAction(options: ActionOptions): Promise<ActionRun> {
   return {
     failed,
     failureMessage: errorLine?.[1] ?? null,
-    outputsRaw: readFileSync(outputPath, 'utf8'),
+    // `core.setOutput` writes its heredoc delimiters with `os.EOL`, so this
+    // file is CRLF-terminated on Windows and LF-terminated everywhere else.
+    // Both are valid to the Actions runner, and no assertion below is about
+    // which one we got, so normalise here rather than spelling `\r?\n` into
+    // every regex that reads this field.
+    outputsRaw: readFileSync(outputPath, 'utf8').replace(/\r\n/g, '\n'),
     requests: [...requests],
   };
 }

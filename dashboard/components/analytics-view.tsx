@@ -12,6 +12,7 @@ import {
 import { cn, formatCompact } from '@/lib/utils';
 
 import { ChartPanel, HealthChart, SeverityDonut, TokenChart, TopIssuesChart } from './charts';
+import { Reveal } from './reveal';
 import { StatCard } from './stat-card';
 
 const RANGES = [7, 30, 90] as const;
@@ -49,7 +50,7 @@ export function AnalyticsView() {
   return (
     <div data-testid="analytics-view" data-range={range} className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-slate-400">
+        <p className="text-sm text-content-secondary">
           Aggregated across every repository the reviewer is installed on.
         </p>
         {/* Filters, not tabs: these rescope every card and chart below rather than swapping one panel, so tab semantics would promise arrow-key navigation that does not exist. */}
@@ -57,7 +58,7 @@ export function AnalyticsView() {
           role="group"
           aria-label="Select time range"
           data-testid="range-tabs"
-          className="inline-flex rounded-xl border border-white/10 bg-white/[0.03] p-1"
+          className="inline-flex rounded-xl border border-line-default bg-surface-overlay/50 p-1"
         >
           {RANGES.map((value) => {
             const active = range === value;
@@ -72,8 +73,8 @@ export function AnalyticsView() {
                 className={cn(
                   'rounded-lg px-3.5 py-1.5 text-xs font-medium transition',
                   active
-                    ? 'bg-accent/20 text-white shadow-glow'
-                    : 'text-slate-400 hover:text-slate-100',
+                    ? 'bg-accent/20 text-content-primary shadow-ring'
+                    : 'text-content-secondary hover:text-content-primary',
                 )}
               >
                 {value}d
@@ -83,11 +84,11 @@ export function AnalyticsView() {
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <Reveal className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           testId="stat-health"
           icon={Gauge}
-          accent="violet"
+          tone="brand"
           label="Code health score"
           value={`${data.latest}/100`}
           delta={data.healthDelta}
@@ -96,7 +97,7 @@ export function AnalyticsView() {
         <StatCard
           testId="stat-findings"
           icon={ListOrdered}
-          accent="amber"
+          tone="warning"
           label="Findings surfaced"
           value={data.totalFindings.toLocaleString('en-US')}
           delta={12}
@@ -106,7 +107,7 @@ export function AnalyticsView() {
         <StatCard
           testId="stat-security-share"
           icon={PieChart}
-          accent="rose"
+          tone="danger"
           label="Security share"
           value={`${data.securityPct}%`}
           delta={-4}
@@ -116,18 +117,18 @@ export function AnalyticsView() {
         <StatCard
           testId="stat-tokens"
           icon={Coins}
-          accent="sky"
+          tone="info"
           label="Tokens consumed"
           value={formatCompact(data.totalTokens)}
           delta={8}
           hint={`${formatCompact(data.avgTokensPerDay)}/day avg`}
         />
-      </div>
+      </Reveal>
 
       <ChartPanel
         testId="panel-health"
         title="Code health over time"
-        subtitle={`Composite score derived from finding density, severity mix, and resolution rate — last ${range} days.`}
+        subtitle={`Composite score derived from finding density, severity mix, and resolution rate, last ${range} days.`}
       >
         <HealthChart points={data.health} />
       </ChartPanel>

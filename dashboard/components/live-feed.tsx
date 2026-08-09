@@ -41,12 +41,12 @@ export function LiveFeed({ reviews, limit = 6 }: { reviews: PullRequestReview[];
   }, [reviews, filter, limit]);
 
   return (
-    <section data-testid="live-feed" className="glass p-5">
+    <section data-testid="live-feed" className="surface p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Activity aria-hidden className="h-4 w-4 text-accent-soft" />
-          <h2 className="text-sm font-semibold text-white">Live audit log</h2>
-          <span className="rounded-md bg-white/[0.07] px-1.5 py-0.5 font-mono text-[0.7rem] text-slate-400">
+          <h2 className="text-sm font-semibold text-content-primary">Live audit log</h2>
+          <span className="rounded-md bg-surface-overlay px-1.5 py-0.5 text-[0.7rem] tabular-nums text-content-secondary">
             {visible.length}
           </span>
         </div>
@@ -71,12 +71,12 @@ export function LiveFeed({ reviews, limit = 6 }: { reviews: PullRequestReview[];
                 className={cn(
                   'rounded-full border px-3 py-1.5 text-xs font-medium transition',
                   active
-                    ? 'border-accent/50 bg-accent/15 text-white shadow-glow'
-                    : 'border-white/10 bg-white/[0.02] text-slate-400 hover:border-white/20 hover:text-slate-100',
+                    ? 'border-accent/50 bg-accent/15 text-content-primary shadow-ring'
+                    : 'border-line-default bg-surface-overlay/30 text-content-secondary hover:border-line-strong hover:text-content-primary',
                 )}
               >
                 {item.label}
-                {count !== undefined ? <span className="ml-1.5 font-mono opacity-70">{count}</span> : null}
+                {count !== undefined ? <span className="ml-1.5 tabular-nums opacity-70">{count}</span> : null}
               </button>
             );
           })}
@@ -87,7 +87,7 @@ export function LiveFeed({ reviews, limit = 6 }: { reviews: PullRequestReview[];
         {visible.length === 0 ? (
           <p
             data-testid="feed-empty"
-            className="flex items-center justify-center gap-2 rounded-xl border border-dashed border-white/10 px-4 py-10 text-sm text-slate-500"
+            className="flex items-center justify-center gap-2 rounded-xl border border-dashed border-line-default px-4 py-10 text-sm text-content-tertiary"
           >
             <Inbox aria-hidden className="h-4 w-4" />
             No reviews match this filter.

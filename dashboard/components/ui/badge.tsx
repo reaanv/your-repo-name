@@ -6,22 +6,22 @@ import type { RiskLevel, ReviewStatus, Severity } from '@/lib/types';
 
 const SEVERITY_STYLES: Record<Severity, { chip: string; icon: LucideIcon; label: string }> = {
   security: {
-    chip: 'border-rose-400/30 bg-rose-500/10 text-rose-200',
+    chip: 'border-state-danger/30 bg-state-danger/10 text-state-danger',
     icon: ShieldAlert,
     label: 'Security',
   },
   bug: {
-    chip: 'border-amber-400/30 bg-amber-500/10 text-amber-200',
+    chip: 'border-state-warning/30 bg-state-warning/10 text-state-warning',
     icon: Bug,
     label: 'Bug',
   },
   optimization: {
-    chip: 'border-sky-400/30 bg-sky-500/10 text-sky-200',
+    chip: 'border-state-info/30 bg-state-info/10 text-state-info',
     icon: Zap,
     label: 'Optimization',
   },
   nit: {
-    chip: 'border-slate-400/25 bg-slate-400/10 text-slate-300',
+    chip: 'border-state-neutral/25 bg-state-neutral/10 text-content-secondary',
     icon: Sparkles,
     label: 'Nit',
   },
@@ -52,16 +52,16 @@ export function SeverityBadge({
     >
       {showIcon ? <Icon aria-hidden className="h-3.5 w-3.5" /> : null}
       {style.label}
-      {count !== undefined ? <span className="font-mono opacity-80">{count}</span> : null}
+      {count !== undefined ? <span className="tabular-nums opacity-80">{count}</span> : null}
     </span>
   );
 }
 
 const RISK_STYLES: Record<RiskLevel, string> = {
-  low: 'border-emerald-400/30 bg-emerald-500/10 text-emerald-200',
-  medium: 'border-amber-400/30 bg-amber-500/10 text-amber-200',
-  high: 'border-orange-400/30 bg-orange-500/10 text-orange-200',
-  critical: 'border-rose-400/40 bg-rose-500/15 text-rose-200',
+  low: 'border-state-success/30 bg-state-success/10 text-state-success',
+  medium: 'border-state-warning/30 bg-state-warning/10 text-state-warning',
+  high: 'border-state-caution/30 bg-state-caution/10 text-state-caution',
+  critical: 'border-state-danger/40 bg-state-danger/15 text-state-danger',
 };
 
 export function RiskBadge({ risk, className }: { risk: RiskLevel; className?: string }) {
@@ -83,22 +83,24 @@ export function RiskBadge({ risk, className }: { risk: RiskLevel; className?: st
 
 const STATUS_STYLES: Record<ReviewStatus, { chip: string; icon: LucideIcon; label: string }> = {
   passed: {
-    chip: 'border-emerald-400/30 bg-emerald-500/10 text-emerald-200',
+    chip: 'border-state-success/30 bg-state-success/10 text-state-success',
     icon: CircleDot,
     label: 'Passed',
   },
+  // The accent is reserved for in-flight state, so `running` owns it and
+  // `changes-requested` reads as the warning it is rather than as branding.
   'changes-requested': {
-    chip: 'border-violet-400/30 bg-violet-500/10 text-violet-200',
+    chip: 'border-state-warning/30 bg-state-warning/10 text-state-warning',
     icon: AlertTriangle,
     label: 'Changes requested',
   },
   running: {
-    chip: 'border-sky-400/30 bg-sky-500/10 text-sky-200',
+    chip: 'border-accent/30 bg-accent/10 text-accent',
     icon: CircleDot,
     label: 'Running',
   },
   failed: {
-    chip: 'border-rose-400/30 bg-rose-500/10 text-rose-200',
+    chip: 'border-state-danger/30 bg-state-danger/10 text-state-danger',
     icon: AlertTriangle,
     label: 'Failed',
   },
@@ -119,7 +121,7 @@ export function StatusBadge({ status, className }: { status: ReviewStatus; class
     >
       <Icon
         aria-hidden
-        className={cn('h-3.5 w-3.5', status === 'running' && 'animate-pulse')}
+        className={cn('h-3.5 w-3.5', status === 'running' && 'animate-pulse-soft')}
       />
       {style.label}
     </span>

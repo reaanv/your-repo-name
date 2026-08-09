@@ -60,7 +60,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   // hand focus back to it lives in the sidebar. Reading `document.activeElement`
   // when the drawer opens is not a substitute: WebKit does not focus a <button>
   // when it is clicked or tapped, so on Safari the "opener" it captures is
-  // <body>, and closing the drawer drops focus to the top of the document —
+  // <body>, and closing the drawer drops focus to the top of the document,
   // precisely the WCAG 2.4.3 failure this is meant to prevent.
   const toggleRef = useRef<HTMLButtonElement | null>(null);
 
@@ -98,8 +98,12 @@ const DESKTOP_QUERY = '(min-width: 1024px)';
 /**
  * Optimistically `true` so the server HTML and the first client render agree
  * and the permanent desktop sidebar is never inerted, not even for one frame.
- * The real match arrives in the effect, long before a keyboard can reach the
- * drawer.
+ *
+ * The cost of that choice is that `inert` cannot land until this effect runs,
+ * which leaves the closed drawer briefly tabbable on a phone. The drawer does
+ * not rely on `inert` alone for that reason: it is also `invisible` while
+ * closed, which takes it out of the tab order with no JavaScript at all. See
+ * the `visibility` note on the `aside` below.
  */
 function useIsDesktop(): boolean {
   const [isDesktop, setIsDesktop] = useState(true);
@@ -143,14 +147,28 @@ function Sidebar({
     return () => document.removeEventListener('keydown', onKey);
   }, [mobileOpen, onClose]);
 
+  // The drawer claims `aria-modal` while it is open, so the page behind it has
+  // to stop scrolling too. Keyed to `asModal` rather than `mobileOpen`: on
+  // desktop the sidebar is permanently "open" and locking there would freeze
+  // the whole app. Same save-and-restore as the review inspector, so whichever
+  // of the two closes last puts the original value back.
+  useEffect(() => {
+    if (!asModal) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [asModal]);
+
   // `aria-modal` hides the rest of the page from assistive tech, so focus has
-  // to move in with it — and back out to whatever opened the drawer on close.
+  // to move in with it, and back out to whatever opened the drawer on close.
   useEffect(() => {
     if (!asModal) return;
     closeRef.current?.focus();
     // The toggle, not whatever happened to hold focus when the drawer opened.
     // Only the toggle can reopen the drawer, so it is where a keyboard user has
-    // to land — and it is the one answer that does not change per browser.
+    // to land, and it is the one answer that does not change per browser.
     return () => toggleRef.current?.focus();
   }, [asModal, toggleRef]);
 
@@ -162,7 +180,7 @@ function Sidebar({
           aria-label="Close navigation overlay"
           data-testid="sidebar-overlay"
           onClick={onClose}
-          className="fixed inset-0 z-30 bg-ink-950/70 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-30 bg-surface-base/70 backdrop-blur-sm lg:hidden"
         />
       ) : null}
 
@@ -174,17 +192,30 @@ function Sidebar({
         aria-modal={asModal ? true : undefined}
         aria-label="Site navigation"
         className={cn(
-          'fixed inset-y-0 left-0 z-40 flex w-[17rem] flex-col border-r border-white/[0.07] bg-ink-900/85 backdrop-blur-2xl transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0',
-          mobileOpen ? 'translate-x-0' : '-translate-x-full',
+          'fixed inset-y-0 left-0 z-40 flex w-[17rem] flex-col border-r border-line-default bg-surface-raised/85 backdrop-blur-2xl',
+          /*
+           * `visibility` carries the tab order, not `inert`. A drawer pushed
+           * off-canvas by a transform alone is still focusable, and `inert` is
+           * applied by an effect, so between first paint and hydration the
+           * closed drawer would hold six invisible tab stops. `invisible` is in
+           * the server HTML, so it holds from the first frame in every engine.
+           *
+           * It is in the transition list so the flip to hidden waits for the
+           * slide-out to finish; `visibility` transitions discretely, so the
+           * reverse direction still shows the drawer immediately on open.
+           */
+          'transition-[transform,visibility] duration-300',
+          mobileOpen ? 'visible translate-x-0' : 'invisible -translate-x-full',
+          'lg:visible lg:sticky lg:top-0 lg:h-screen lg:translate-x-0',
         )}
       >
         <div className="flex items-center gap-3 px-5 py-5">
-          <span className="grid h-10 w-10 place-items-center rounded-xl border border-accent/40 bg-accent/15 text-accent-soft shadow-glow">
+          <span className="grid h-10 w-10 place-items-center rounded-xl border border-accent/40 bg-accent/15 text-accent-soft shadow-ring">
             <ShieldCheck aria-hidden className="h-5 w-5" />
           </span>
           <span className="min-w-0">
-            <span className="block truncate text-sm font-semibold text-white">PR Reviewer</span>
-            <span className="block truncate text-xs text-slate-400">Agentic CI/CD</span>
+            <span className="block truncate text-sm font-semibold text-content-primary">PR Reviewer</span>
+            <span className="block truncate text-xs text-content-secondary">Agentic CI/CD</span>
           </span>
           <button
             ref={closeRef}
@@ -192,7 +223,7 @@ function Sidebar({
             aria-label="Close navigation"
             data-testid="sidebar-close"
             onClick={onClose}
-            className="ml-auto rounded-lg border border-white/10 p-1.5 text-slate-400 transition hover:bg-white/5 hover:text-white lg:hidden"
+            className="ml-auto rounded-lg border border-line-default p-1.5 text-content-secondary transition hover:bg-surface-overlay hover:text-content-primary lg:hidden"
           >
             <X aria-hidden className="h-4 w-4" />
           </button>
@@ -214,13 +245,13 @@ function Sidebar({
                 className={cn(
                   'group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition',
                   active
-                    ? 'border border-accent/30 bg-accent/12 font-medium text-white shadow-glow'
-                    : 'border border-transparent text-slate-400 hover:bg-white/[0.04] hover:text-slate-100',
+                    ? 'border border-accent/30 bg-accent/12 font-medium text-content-primary shadow-ring'
+                    : 'border border-transparent text-content-secondary hover:bg-surface-overlay/50 hover:text-content-primary',
                 )}
               >
                 <Icon
                   aria-hidden
-                  className={cn('h-4.5 w-4.5 shrink-0', active ? 'text-accent-soft' : 'text-slate-500 group-hover:text-slate-300')}
+                  className={cn('h-4.5 w-4.5 shrink-0', active ? 'text-accent-soft' : 'text-content-tertiary group-hover:text-content-secondary')}
                   style={{ height: '1.125rem', width: '1.125rem' }}
                 />
                 <span className="truncate">{item.label}</span>
@@ -230,9 +261,9 @@ function Sidebar({
         </nav>
 
         <div className="px-3 pb-5">
-          <div className="glass-soft p-4">
-            <p className="text-xs font-medium text-slate-300">Fail-closed pipeline</p>
-            <p className="mt-1.5 text-xs leading-relaxed text-slate-500">
+          <div className="surface-quiet p-4">
+            <p className="text-xs font-medium text-content-secondary">Fail-closed pipeline</p>
+            <p className="mt-1.5 text-xs leading-relaxed text-content-tertiary">
               Diffs are redacted before they leave the runner, and a schema violation blocks the
               review instead of posting it.
             </p>
@@ -305,7 +336,7 @@ function TopBar({
   }, [menuOpen, closeMenu]);
 
   // `role="menu"` drops screen readers into focus mode, where browse-mode
-  // arrows stop working — so the menu itself has to own focus and move it.
+  // arrows stop working, so the menu itself has to own focus and move it.
   useEffect(() => {
     if (!menuOpen) return;
     itemRefs.current[activeItem]?.focus();
@@ -331,7 +362,7 @@ function TopBar({
   return (
     <header
       data-testid="topbar"
-      className="sticky top-0 z-20 border-b border-white/[0.06] bg-ink-950/70 backdrop-blur-xl"
+      className="sticky top-0 z-20 border-b border-line-subtle bg-surface-base/70 backdrop-blur-xl"
     >
       <div className="mx-auto flex w-full max-w-[110rem] items-center gap-3 px-4 py-3.5 sm:px-6 lg:px-10">
         <button
@@ -340,25 +371,25 @@ function TopBar({
           aria-label="Open navigation"
           data-testid="sidebar-toggle"
           onClick={onMenu}
-          className="rounded-lg border border-white/10 p-2 text-slate-300 transition hover:bg-white/5 hover:text-white lg:hidden"
+          className="rounded-lg border border-line-default p-2 text-content-secondary transition hover:bg-surface-overlay hover:text-content-primary lg:hidden"
         >
           <Menu aria-hidden className="h-4 w-4" />
         </button>
 
-        <h1 data-testid="page-title" className="truncate text-base font-semibold text-white sm:text-lg">
+        <h1 data-testid="page-title" className="truncate text-base font-semibold text-content-primary sm:text-lg">
           {title}
         </h1>
 
         <span
           data-testid="agent-status"
-          className="ml-2 hidden items-center gap-2 rounded-full border border-emerald-400/25 bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-200 sm:inline-flex"
+          className="ml-2 hidden items-center gap-2 rounded-full border border-state-success/25 bg-state-success/10 px-2.5 py-1 text-xs font-medium text-state-success sm:inline-flex"
         >
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+          <span className="h-1.5 w-1.5 rounded-full bg-state-success" />
           Agent online
         </span>
 
         <div className="ml-auto flex items-center gap-2">
-          <span data-testid="sync-label" className="hidden text-xs text-slate-500 md:inline">
+          <span data-testid="sync-label" className="hidden text-xs text-content-tertiary md:inline">
             {syncLabel}
           </span>
 
@@ -367,7 +398,7 @@ function TopBar({
             data-testid="sync-button"
             data-syncing={syncing ? 'true' : 'false'}
             onClick={handleSync}
-            className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-xs font-medium text-slate-200 transition hover:border-white/20 hover:bg-white/[0.07]"
+            className="inline-flex items-center gap-2 rounded-lg border border-line-default bg-surface-overlay/50 px-3 py-2 text-xs font-medium text-content-primary transition hover:border-line-strong hover:bg-surface-overlay"
           >
             <RefreshCw aria-hidden className={cn('h-3.5 w-3.5', syncing && 'animate-spin')} />
             <span className="hidden sm:inline">Sync now</span>
@@ -386,7 +417,7 @@ function TopBar({
                 setActiveItem(0);
                 setMenuOpen((open) => !open);
               }}
-              className="grid h-9 w-9 place-items-center rounded-full border border-white/10 bg-white/[0.05] text-slate-200 transition hover:border-accent/40 hover:text-white"
+              className="grid h-9 w-9 place-items-center rounded-full border border-line-default bg-surface-overlay text-content-primary transition hover:border-accent/40 hover:text-content-primary"
             >
               <UserRound aria-hidden className="h-4 w-4" />
             </button>
@@ -397,13 +428,13 @@ function TopBar({
                 aria-labelledby={accountButtonId}
                 data-testid="account-menu"
                 onKeyDown={handleMenuKeyDown}
-                className="glass absolute right-0 top-11 w-56 animate-scale-in overflow-hidden p-1.5"
+                className="surface absolute right-0 top-11 w-56 animate-scale-in overflow-hidden p-1.5"
               >
                 <div role="none" className="px-3 py-2">
-                  <p className="text-sm font-medium text-white">Reanna Verma</p>
-                  <p className="truncate text-xs text-slate-400">reaanverma@gmail.com</p>
+                  <p className="text-sm font-medium text-content-primary">Reanna Verma</p>
+                  <p className="truncate text-xs text-content-secondary">reaanverma@gmail.com</p>
                 </div>
-                <div role="separator" className="my-1 h-px bg-white/[0.07]" />
+                <div role="separator" className="my-1 h-px bg-surface-overlay" />
                 <Link
                   ref={(node) => {
                     itemRefs.current[0] = node;
@@ -412,12 +443,12 @@ function TopBar({
                   role="menuitem"
                   tabIndex={activeItem === 0 ? 0 : -1}
                   data-testid="account-menu-settings"
-                  // Navigating away does not unmount the menu — it lives in the
-                  // shell, not the page — so without this the overlay stays
+                  // Navigating away does not unmount the menu. It lives in the
+                  // shell, not the page, so without this the overlay stays
                   // open on top of the route it just moved to. No focus
                   // restore: focus belongs to the new page, not the trigger.
                   onClick={() => closeMenu(false)}
-                  className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-300 transition hover:bg-white/[0.06] hover:text-white"
+                  className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-content-secondary transition hover:bg-surface-overlay hover:text-content-primary"
                 >
                   <Settings aria-hidden className="h-4 w-4" />
                   Settings
@@ -431,7 +462,7 @@ function TopBar({
                   tabIndex={activeItem === 1 ? 0 : -1}
                   data-testid="account-menu-signout"
                   onClick={() => closeMenu(true)}
-                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-slate-300 transition hover:bg-white/[0.06] hover:text-white"
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-content-secondary transition hover:bg-surface-overlay hover:text-content-primary"
                 >
                   <LogOut aria-hidden className="h-4 w-4" />
                   Sign out

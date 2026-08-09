@@ -527,7 +527,7 @@ export const REVIEWS: PullRequestReview[] = [
         '30s search timeout will outlive the request budget',
         'src/config/integrations.ts',
         13,
-        'The gateway cancels at 15s, so a 30s client timeout can never fire — the request is killed upstream first and the retry budget is wasted. Set it below the gateway timeout.',
+        'The gateway cancels at 15s, so a 30s client timeout can never fire: the request is killed upstream first and the retry budget is wasted. Set it below the gateway timeout.',
         0.74,
         null,
       ),
@@ -626,7 +626,7 @@ export const REVIEWS: PullRequestReview[] = [
     risk: 'low',
     createdAt: minutesAgo(410),
     durationMs: 11_600,
-    summary: 'Presentational change with no logic. Clean diff — nothing worth blocking on.',
+    summary: 'Presentational change with no logic. Clean diff, nothing worth blocking on.',
     findings: [],
     diff: DIFF_FEED,
     tokens: { input: 7_640, output: 410 },
@@ -647,7 +647,7 @@ export const REVIEWS: PullRequestReview[] = [
     risk: 'medium',
     createdAt: minutesAgo(6),
     durationMs: 0,
-    summary: 'Review in progress — the diff has been sanitized and sent to the model.',
+    summary: 'Review in progress: the diff has been sanitized and sent to the model.',
     findings: [],
     diff: DIFF_UPLOADS,
     tokens: { input: 0, output: 0 },
@@ -832,7 +832,7 @@ function dayStamp(daysAgo: number): string {
   return d.toISOString().slice(0, 10);
 }
 
-/** Code-health score, 0–100. Trends upward over the window with realistic noise. */
+/** Code-health score, 0-100. Trends upward over the window with realistic noise. */
 export function healthSeries(days: number): TimePoint[] {
   const rng = mulberry32(0xc0ffee + days);
   const points: TimePoint[] = [];

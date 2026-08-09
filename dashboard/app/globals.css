@@ -2,9 +2,51 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Design tokens.
+ *
+ * Every value is stored as space-separated RGB channels so Tailwind can apply
+ * opacity modifiers to it (`bg-surface-raised/60`). Components reference the
+ * semantic name only; no component should ever name a raw palette colour.
+ *
+ * The palette is graphite + cyan. Hue is a scarce resource here: the accent
+ * owns cyan, and every other hue in the interface is reserved for state
+ * (severity, risk, status) so that colour always means something.
+ */
 @layer base {
   :root {
     color-scheme: dark;
+
+    /* Surfaces, darkest to lightest. */
+    --surface-base: 8 9 11;
+    --surface-raised: 13 15 18;
+    --surface-overlay: 19 22 25;
+    --surface-inset: 26 30 35;
+
+    /* Hairlines. */
+    --line-subtle: 255 255 255;
+    --line-default: 255 255 255;
+    --line-strong: 255 255 255;
+
+    /* Text, most to least prominent. */
+    --content-primary: 233 237 241;
+    --content-secondary: 154 164 176;
+    --content-tertiary: 107 118 129;
+    --content-muted: 74 84 94;
+
+    /* Brand accent. Cyan is reserved for interaction and in-flight state. */
+    --accent: 34 211 238;
+    --accent-soft: 103 232 249;
+    --accent-deep: 8 145 178;
+    --accent-ink: 6 50 59;
+
+    /* State hues. Never used decoratively. */
+    --state-danger: 251 113 133;
+    --state-warning: 251 191 36;
+    --state-caution: 251 146 60;
+    --state-success: 52 211 153;
+    --state-info: 96 165 250;
+    --state-neutral: 148 163 184;
   }
 
   html,
@@ -13,41 +55,41 @@
   }
 
   body {
-    @apply bg-ink-950 text-slate-200 antialiased;
-    background-image:
-      radial-gradient(60rem 40rem at 12% -10%, rgba(109, 40, 217, 0.18), transparent 60%),
-      radial-gradient(48rem 32rem at 92% 8%, rgba(14, 165, 233, 0.12), transparent 60%),
-      radial-gradient(52rem 36rem at 50% 110%, rgba(139, 92, 246, 0.1), transparent 60%);
-    background-attachment: fixed;
+    @apply bg-surface-base text-content-primary antialiased;
   }
 
   ::selection {
-    @apply bg-accent/30 text-white;
+    @apply bg-accent/25 text-white;
   }
 
   *:focus-visible {
-    @apply outline-none ring-2 ring-accent/70 ring-offset-2 ring-offset-ink-950;
+    @apply outline-none ring-2 ring-accent/70 ring-offset-2 ring-offset-surface-base;
   }
 }
 
 @layer components {
-  .glass {
-    @apply rounded-2xl border border-white/10 bg-white/[0.035] shadow-glass backdrop-blur-xl;
+  /*
+   * The one panel treatment. Flat graphite with a single hairline, no glass
+   * blur and no gradient wash: at this density the blur cost bought nothing
+   * legible and the wash tinted every colour sitting on top of it.
+   */
+  .surface {
+    @apply rounded-xl border border-line-default bg-surface-raised;
   }
 
-  .glass-soft {
-    @apply rounded-xl border border-white/[0.07] bg-white/[0.02] backdrop-blur-md;
+  .surface-quiet {
+    @apply rounded-lg border border-line-subtle bg-surface-raised/60;
   }
 
   .panel-title {
-    @apply text-sm font-semibold uppercase tracking-[0.14em] text-slate-400;
+    @apply text-xs font-semibold uppercase tracking-[0.12em] text-content-tertiary;
   }
 }
 
 @layer utilities {
   .scrollbar-slim {
     scrollbar-width: thin;
-    scrollbar-color: rgba(148, 163, 184, 0.28) transparent;
+    scrollbar-color: rgb(var(--content-muted) / 0.4) transparent;
   }
 
   .scrollbar-slim::-webkit-scrollbar {
@@ -56,7 +98,7 @@
   }
 
   .scrollbar-slim::-webkit-scrollbar-thumb {
-    background-color: rgba(148, 163, 184, 0.28);
+    background-color: rgb(var(--content-muted) / 0.4);
     border-radius: 9999px;
   }
 
@@ -66,5 +108,20 @@
 
   .text-balance {
     text-wrap: balance;
+  }
+
+  /*
+   * GSAP sets inline styles on these before first paint. Declaring the resting
+   * state here keeps the pre-hydration frame identical to the animated one, so
+   * nothing flashes when motion is disabled.
+   */
+  .motion-item {
+    will-change: transform, opacity;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .motion-item {
+      will-change: auto;
+    }
   }
 }

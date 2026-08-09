@@ -146,10 +146,22 @@ test.describe('accessibility contracts', () => {
 
     const countTabbable = () =>
       sidebar.evaluate((node: ShimElement) => {
-        // `inert` is inherited, so walk up to an inert ancestor rather than
-        // reading the attribute off the control itself.
+        const { getComputedStyle } = globalThis as unknown as ShimWindow;
         const candidates = node.querySelectorAll('a[href], button, input, select, textarea');
-        return Array.from(candidates).filter((el) => el.tabIndex >= 0 && !el.closest('[inert]')).length;
+        return Array.from(candidates).filter((el) => {
+          if (el.tabIndex < 0) return false;
+          // `inert` is inherited, so walk up to an inert ancestor rather than
+          // reading the attribute off the control itself.
+          if (el.closest('[inert]')) return false;
+          // `visibility: hidden` is inherited too, and takes an element out of
+          // the tab order on its own. It is the drawer's first line of defence
+          // precisely because it needs no JavaScript: `inert` is applied by an
+          // effect, so before hydration it is the only thing holding. Counting
+          // a hidden control as tabbable would report a tab stop that no user
+          // can actually reach.
+          if (getComputedStyle(el).visibility === 'hidden') return false;
+          return true;
+        }).length;
       });
 
     const tabbableWhenClosed = await countTabbable();

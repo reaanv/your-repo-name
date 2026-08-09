@@ -12,6 +12,7 @@ import {
 
 import { ChartPanel, HealthChart, TopIssuesChart } from '@/components/charts';
 import { LiveFeed } from '@/components/live-feed';
+import { Reveal } from '@/components/reveal';
 import { StatCard } from '@/components/stat-card';
 import { REVIEWS, headlineMetrics, healthSeries, topIssues } from '@/lib/mock-data';
 import { formatDuration } from '@/lib/utils';
@@ -56,18 +57,17 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-5">
-      <section data-testid="hero" className="glass relative overflow-hidden p-6">
-        <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-accent/20 blur-3xl" />
-        <div className="relative flex flex-wrap items-start justify-between gap-6">
+      <section data-testid="hero" className="surface p-6">
+        <div className="flex flex-wrap items-start justify-between gap-6">
           <div className="max-w-2xl">
             <span className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-xs font-medium text-accent-soft">
               <ShieldCheck aria-hidden className="h-3.5 w-3.5" />
               Fail-closed by design
             </span>
-            <h2 className="mt-3 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+            <h2 className="mt-3 text-2xl font-semibold tracking-tight text-content-primary sm:text-3xl">
               Every pull request, reviewed before a human opens it.
             </h2>
-            <p className="mt-2 text-sm leading-relaxed text-slate-400">
+            <p className="mt-2 text-sm leading-relaxed text-content-secondary">
               The action redacts secrets on the runner, sends only sanitized diffs to the model, validates
               the structured response against a schema, and posts inline comments anchored to real lines.
               Nothing is posted unless the payload parses.
@@ -76,24 +76,29 @@ export default function DashboardPage() {
 
           <dl data-testid="hero-stats" className="grid shrink-0 grid-cols-2 gap-x-8 gap-y-4">
             <div>
-              <dt className="text-xs uppercase tracking-[0.12em] text-slate-500">Secrets redacted</dt>
-              <dd data-testid="hero-redactions" className="mt-1 font-mono text-2xl font-semibold text-white">
+              <dt className="text-xs uppercase tracking-[0.12em] text-content-tertiary">Secrets redacted</dt>
+              <dd
+                data-testid="hero-redactions"
+                className="mt-1 text-2xl font-semibold tabular-nums text-content-primary"
+              >
                 {metrics.secretsRedacted}
               </dd>
             </div>
             <div>
-              <dt className="text-xs uppercase tracking-[0.12em] text-slate-500">Auto-resolved</dt>
-              <dd className="mt-1 font-mono text-2xl font-semibold text-white">{metrics.autoResolvedPct}%</dd>
+              <dt className="text-xs uppercase tracking-[0.12em] text-content-tertiary">Auto-resolved</dt>
+              <dd className="mt-1 text-2xl font-semibold tabular-nums text-content-primary">
+                {metrics.autoResolvedPct}%
+              </dd>
             </div>
           </dl>
         </div>
       </section>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <Reveal className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           testId="stat-reviews"
           icon={GitPullRequest}
-          accent="violet"
+          tone="brand"
           label="Reviews today"
           value={`${metrics.reviewsToday}`}
           delta={3}
@@ -102,7 +107,7 @@ export default function DashboardPage() {
         <StatCard
           testId="stat-open-findings"
           icon={Bug}
-          accent="amber"
+          tone="warning"
           label="Open findings"
           value={`${metrics.findingsOpen}`}
           delta={-6}
@@ -112,7 +117,7 @@ export default function DashboardPage() {
         <StatCard
           testId="stat-score"
           icon={Gauge}
-          accent="emerald"
+          tone="success"
           label="Code health"
           value={`${metrics.healthScore}/100`}
           delta={metrics.healthDelta}
@@ -121,16 +126,16 @@ export default function DashboardPage() {
         <StatCard
           testId="stat-duration"
           icon={Timer}
-          accent="sky"
+          tone="info"
           label="Median review time"
           value={formatDuration(metrics.medianDurationSec)}
           delta={-9}
           hint="wall clock, per PR"
           invertDelta
         />
-      </div>
+      </Reveal>
 
-      <section data-testid="pipeline" className="glass p-5">
+      <section data-testid="pipeline" className="surface p-5">
         <h2 className="panel-title">Review pipeline</h2>
         <ol className="mt-4 grid gap-3 md:grid-cols-3 xl:grid-cols-5">
           {PIPELINE.map((step, index) => {
@@ -139,16 +144,18 @@ export default function DashboardPage() {
               <li
                 key={step.id}
                 data-testid={`pipeline-step-${step.id}`}
-                className="rounded-xl border border-white/[0.06] bg-white/[0.015] p-4 transition hover:border-accent/30 hover:bg-white/[0.04]"
+                className="rounded-xl border border-line-subtle bg-surface-overlay/40 p-4 transition-colors hover:border-accent/30 hover:bg-surface-overlay"
               >
                 <div className="flex items-center gap-2.5">
-                  <span className="grid h-8 w-8 place-items-center rounded-lg border border-accent/25 bg-accent/10 text-accent-soft">
+                  <span className="grid h-8 w-8 place-items-center rounded-lg border border-accent/25 bg-accent/10 text-accent">
                     <Icon aria-hidden className="h-4 w-4" />
                   </span>
-                  <span className="font-mono text-xs text-slate-600">0{index + 1}</span>
+                  <span className="text-xs tabular-nums text-content-muted">
+                    Step {index + 1} of {PIPELINE.length}
+                  </span>
                 </div>
-                <p className="mt-3 text-sm font-medium text-slate-100">{step.title}</p>
-                <p className="mt-1 text-xs leading-relaxed text-slate-500">{step.body}</p>
+                <p className="mt-3 text-sm font-medium text-content-primary">{step.title}</p>
+                <p className="mt-1 text-xs leading-relaxed text-content-tertiary">{step.body}</p>
               </li>
             );
           })}

@@ -101,10 +101,10 @@ export function ReviewsExplorer({ reviews }: { reviews: PullRequestReview[] }) {
 
   return (
     <section data-testid="reviews-explorer" className="space-y-4">
-      <div className="glass space-y-4 p-5">
+      <div className="surface space-y-4 p-5">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
           <div className="relative flex-1">
-            <Search aria-hidden className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+            <Search aria-hidden className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-content-tertiary" />
             <input
               type="search"
               value={query}
@@ -115,12 +115,12 @@ export function ReviewsExplorer({ reviews }: { reviews: PullRequestReview[] }) {
               placeholder="Search by title, repo, author, branch, or finding…"
               aria-label="Search reviews"
               data-testid="reviews-search"
-              className="w-full rounded-xl border border-white/10 bg-white/[0.03] py-2.5 pl-10 pr-3 text-sm text-slate-100 placeholder:text-slate-500 transition focus:border-accent/50 focus:bg-white/[0.06]"
+              className="w-full rounded-xl border border-line-default bg-surface-overlay/50 py-2.5 pl-10 pr-3 text-sm text-content-primary placeholder:text-content-tertiary transition focus:border-accent/50 focus:bg-surface-overlay"
             />
           </div>
 
           <div className="flex items-center gap-2">
-            <label htmlFor="reviews-sort" className="text-xs text-slate-500">
+            <label htmlFor="reviews-sort" className="text-xs text-content-tertiary">
               Sort
             </label>
             <select
@@ -128,7 +128,7 @@ export function ReviewsExplorer({ reviews }: { reviews: PullRequestReview[] }) {
               value={sort}
               onChange={(event) => setSort(event.target.value as SortKey)}
               data-testid="reviews-sort"
-              className="rounded-xl border border-white/10 bg-ink-850 px-3 py-2.5 text-sm text-slate-200 transition focus:border-accent/50"
+              className="rounded-xl border border-line-default bg-surface-overlay px-3 py-2.5 text-sm text-content-primary transition focus:border-accent/50"
             >
               {SORTS.map((option) => (
                 <option key={option.id} value={option.id}>
@@ -142,7 +142,7 @@ export function ReviewsExplorer({ reviews }: { reviews: PullRequestReview[] }) {
               data-testid="reviews-reset"
               onClick={resetFilters}
               disabled={!filtersActive && sort === 'newest'}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5 text-xs font-medium text-slate-300 transition hover:border-white/20 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-line-default bg-surface-overlay/50 px-3 py-2.5 text-xs font-medium text-content-secondary transition hover:border-line-strong hover:text-content-primary disabled:cursor-not-allowed disabled:opacity-40"
             >
               <X aria-hidden className="h-3.5 w-3.5" />
               Reset
@@ -150,7 +150,7 @@ export function ReviewsExplorer({ reviews }: { reviews: PullRequestReview[] }) {
           </div>
         </div>
 
-        <div className="flex flex-col gap-3 border-t border-white/[0.06] pt-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-col gap-3 border-t border-line-subtle pt-4 lg:flex-row lg:items-center lg:justify-between">
           {/* Filters, not tabs: these narrow the list below rather than swapping panels, so tab semantics would promise arrow-key navigation that does not exist. */}
           <div role="group" aria-label="Filter by status" data-testid="status-tabs" className="flex flex-wrap gap-1.5">
             {(['all', ...REVIEW_STATUSES] as StatusFilter[]).map((value) => {
@@ -171,12 +171,12 @@ export function ReviewsExplorer({ reviews }: { reviews: PullRequestReview[] }) {
                   className={cn(
                     'rounded-full border px-3 py-1.5 text-xs font-medium transition',
                     active
-                      ? 'border-accent/50 bg-accent/15 text-white shadow-glow'
-                      : 'border-white/10 bg-white/[0.02] text-slate-400 hover:border-white/20 hover:text-slate-100',
+                      ? 'border-accent/50 bg-accent/15 text-content-primary shadow-ring'
+                      : 'border-line-default bg-surface-overlay/30 text-content-secondary hover:border-line-strong hover:text-content-primary',
                   )}
                 >
                   {value === 'all' ? 'All' : STATUS_LABELS[value]}
-                  <span className="ml-1.5 font-mono opacity-70">{count}</span>
+                  <span className="ml-1.5 tabular-nums opacity-70">{count}</span>
                 </button>
               );
             })}
@@ -188,7 +188,7 @@ export function ReviewsExplorer({ reviews }: { reviews: PullRequestReview[] }) {
             data-testid="severity-filters"
             className="flex flex-wrap items-center gap-1.5"
           >
-            <Filter aria-hidden className="h-3.5 w-3.5 text-slate-500" />
+            <Filter aria-hidden className="h-3.5 w-3.5 text-content-tertiary" />
             {SEVERITIES.map((severity) => {
               const active = severities.includes(severity);
               return (
@@ -202,8 +202,8 @@ export function ReviewsExplorer({ reviews }: { reviews: PullRequestReview[] }) {
                   className={cn(
                     'rounded-full border px-3 py-1.5 text-xs font-medium capitalize transition',
                     active
-                      ? 'border-accent/50 bg-accent/15 text-white shadow-glow'
-                      : 'border-white/10 bg-white/[0.02] text-slate-400 hover:border-white/20 hover:text-slate-100',
+                      ? 'border-accent/50 bg-accent/15 text-content-primary shadow-ring'
+                      : 'border-line-default bg-surface-overlay/30 text-content-secondary hover:border-line-strong hover:text-content-primary',
                   )}
                 >
                   {severity}
@@ -214,9 +214,9 @@ export function ReviewsExplorer({ reviews }: { reviews: PullRequestReview[] }) {
         </div>
       </div>
 
-      <p data-testid="reviews-count" className="text-xs text-slate-500">
-        Showing <span className="font-mono text-slate-300">{visible.length}</span> of{' '}
-        <span className="font-mono text-slate-300">{filtered.length}</span> review
+      <p data-testid="reviews-count" className="text-xs text-content-tertiary">
+        Showing <span className="tabular-nums text-content-secondary">{visible.length}</span> of{' '}
+        <span className="tabular-nums text-content-secondary">{filtered.length}</span> review
         {filtered.length === 1 ? '' : 's'}
         {filtersActive ? ' matching your filters' : ''}.
       </p>
@@ -225,7 +225,7 @@ export function ReviewsExplorer({ reviews }: { reviews: PullRequestReview[] }) {
         {visible.length === 0 ? (
           <p
             data-testid="reviews-empty"
-            className="flex items-center justify-center gap-2 rounded-xl border border-dashed border-white/10 px-4 py-14 text-sm text-slate-500"
+            className="flex items-center justify-center gap-2 rounded-xl border border-dashed border-line-default px-4 py-14 text-sm text-content-tertiary"
           >
             <Inbox aria-hidden className="h-4 w-4" />
             No reviews match your filters.
@@ -241,7 +241,7 @@ export function ReviewsExplorer({ reviews }: { reviews: PullRequestReview[] }) {
             type="button"
             data-testid="reviews-load-more"
             onClick={() => setVisibleCount((count) => count + PAGE_SIZE)}
-            className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:border-accent/40 hover:bg-white/[0.07] hover:text-white"
+            className="rounded-xl border border-line-default bg-surface-overlay/50 px-4 py-2.5 text-sm font-medium text-content-primary transition hover:border-accent/40 hover:bg-surface-overlay hover:text-content-primary"
           >
             Load {Math.min(PAGE_SIZE, filtered.length - visible.length)} more
           </button>

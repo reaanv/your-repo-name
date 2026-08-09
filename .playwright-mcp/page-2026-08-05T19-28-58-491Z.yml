@@ -1,0 +1,153 @@
+- generic [ref=f1e2]:
+  - complementary "Site navigation" [ref=f1e3]:
+    - generic [ref=f1e9]:
+      - generic [ref=f1e10]: PR Reviewer
+      - generic [ref=f1e11]: Agentic CI/CD
+    - navigation "Primary" [ref=f1e12]:
+      - link "Dashboard" [ref=f1e13] [cursor=pointer]:
+        - /url: /
+      - link "PR Reviews" [ref=f1e20] [cursor=pointer]:
+        - /url: /reviews
+      - link "Analytics" [ref=f1e26] [cursor=pointer]:
+        - /url: /analytics
+      - link "Rule Configuration" [ref=f1e30] [cursor=pointer]:
+        - /url: /rules
+      - link "Settings" [ref=f1e33] [cursor=pointer]:
+        - /url: /settings
+    - generic [ref=f1e39]:
+      - paragraph [ref=f1e40]: Fail-closed pipeline
+      - paragraph [ref=f1e41]: Diffs are redacted before they leave the runner, and a schema violation blocks the review instead of posting it.
+  - generic [ref=f1e42]:
+    - banner [ref=f1e43]:
+      - generic [ref=f1e44]:
+        - heading "PR Reviews" [level=1] [ref=f1e45]
+        - generic [ref=f1e46]: Agent online
+        - generic [ref=f1e48]:
+          - generic [ref=f1e49]: Synced 1m ago
+          - button "Sync now" [ref=f1e50] [cursor=pointer]
+          - button "Account menu" [ref=f1e58] [cursor=pointer]
+    - main [ref=f1e62]:
+      - generic [ref=f1e63]:
+        - generic [ref=f1e64]:
+          - heading "Pull request reviews" [level=2] [ref=f1e65]
+          - paragraph [ref=f1e66]: Every run the action has completed, newest first. Open a row to inspect the findings, the diff with inline AI comments anchored to real lines, and the raw structured payload the model returned.
+        - generic [ref=f1e67]:
+          - generic [ref=f1e68]:
+            - generic [ref=f1e69]:
+              - searchbox "Search reviews" [ref=f1e71]
+              - generic [ref=f1e72]:
+                - generic [ref=f1e73]: Sort
+                - combobox "Sort" [ref=f1e74]:
+                  - option "Newest first" [selected]
+                  - option "Oldest first"
+                  - option "Most findings"
+                  - option "Highest risk"
+                - button "Reset" [disabled] [ref=f1e75]
+            - generic [ref=f1e79]:
+              - group "Filter by status" [ref=f1e80]:
+                - button "All14" [pressed] [ref=f1e81] [cursor=pointer]
+                - button "Passed7" [ref=f1e82] [cursor=pointer]
+                - button "Changes requested5" [ref=f1e83] [cursor=pointer]
+                - button "Running1" [ref=f1e84] [cursor=pointer]
+                - button "Failed1" [ref=f1e85] [cursor=pointer]
+              - group "Filter by severity" [ref=f1e86]:
+                - button "security" [ref=f1e89] [cursor=pointer]
+                - button "bug" [ref=f1e90] [cursor=pointer]
+                - button "optimization" [ref=f1e91] [cursor=pointer]
+                - button "nit" [ref=f1e92] [cursor=pointer]
+          - paragraph [ref=f1e93]: Showing 6 of 14 reviews.
+          - generic [ref=f1e94]:
+            - button "Retry failed webhook deliveries acme/atlas-api#4809 Running medium risk sam-oduya · 6m ago" [ref=f1e95] [cursor=pointer]:
+              - generic [ref=f1e101]:
+                - generic [ref=f1e102]:
+                  - generic [ref=f1e103]: Retry failed webhook deliveries
+                  - generic [ref=f1e104]: acme/atlas-api#4809
+                - generic [ref=f1e105]:
+                  - generic [ref=f1e106]: Running
+                  - generic [ref=f1e110]: medium risk
+                  - generic [ref=f1e114]: sam-oduya · 6m ago
+            - button "Add session refresh and admin impersonation acme/atlas-api#4821 Changes requested critical risk Security 2 Bug 1 Optimization 1 dana-w · 11m ago" [ref=f1e117] [cursor=pointer]:
+              - generic [ref=f1e123]:
+                - generic [ref=f1e124]:
+                  - generic [ref=f1e125]: Add session refresh and admin impersonation
+                  - generic [ref=f1e126]: acme/atlas-api#4821
+                - generic [ref=f1e127]:
+                  - generic [ref=f1e128]: Changes requested
+                  - generic [ref=f1e131]: critical risk
+                  - generic [ref=f1e135]:
+                    - text: Security
+                    - generic [ref=f1e136]: "2"
+                  - generic [ref=f1e137]:
+                    - text: Bug
+                    - generic [ref=f1e138]: "1"
+                  - generic [ref=f1e139]:
+                    - text: Optimization
+                    - generic [ref=f1e140]: "1"
+                  - generic [ref=f1e141]: dana-w · 11m ago
+            - button "Introduce discount codes at checkout acme/atlas-web#2290 Changes requested high risk Bug 2 Optimization 1 Nit 1 marcus-t · 38m ago" [ref=f1e144] [cursor=pointer]:
+              - generic [ref=f1e150]:
+                - generic [ref=f1e151]:
+                  - generic [ref=f1e152]: Introduce discount codes at checkout
+                  - generic [ref=f1e153]: acme/atlas-web#2290
+                - generic [ref=f1e154]:
+                  - generic [ref=f1e155]: Changes requested
+                  - generic [ref=f1e158]: high risk
+                  - generic [ref=f1e162]:
+                    - text: Bug
+                    - generic [ref=f1e163]: "2"
+                  - generic [ref=f1e164]:
+                    - text: Optimization
+                    - generic [ref=f1e165]: "1"
+                  - generic [ref=f1e166]:
+                    - text: Nit
+                    - generic [ref=f1e167]: "1"
+                  - generic [ref=f1e168]: marcus-t · 38m ago
+            - button "Wire up direct-to-S3 uploads acme/atlas-api#4818 Changes requested high risk Security 2 Bug 1 Optimization 1 priya-n · 2h ago" [ref=f1e171] [cursor=pointer]:
+              - generic [ref=f1e177]:
+                - generic [ref=f1e178]:
+                  - generic [ref=f1e179]: Wire up direct-to-S3 uploads
+                  - generic [ref=f1e180]: acme/atlas-api#4818
+                - generic [ref=f1e181]:
+                  - generic [ref=f1e182]: Changes requested
+                  - generic [ref=f1e185]: high risk
+                  - generic [ref=f1e189]:
+                    - text: Security
+                    - generic [ref=f1e190]: "2"
+                  - generic [ref=f1e191]:
+                    - text: Bug
+                    - generic [ref=f1e192]: "1"
+                  - generic [ref=f1e193]:
+                    - text: Optimization
+                    - generic [ref=f1e194]: "1"
+                  - generic [ref=f1e195]: priya-n · 2h ago
+            - button "Paginate the activity feed acme/atlas-web#2287 Passed medium risk Bug 2 Optimization 1 sam-oduya · 2h ago" [ref=f1e198] [cursor=pointer]:
+              - generic [ref=f1e204]:
+                - generic [ref=f1e205]:
+                  - generic [ref=f1e206]: Paginate the activity feed
+                  - generic [ref=f1e207]: acme/atlas-web#2287
+                - generic [ref=f1e208]:
+                  - generic [ref=f1e209]: Passed
+                  - generic [ref=f1e213]: medium risk
+                  - generic [ref=f1e217]:
+                    - text: Bug
+                    - generic [ref=f1e218]: "2"
+                  - generic [ref=f1e219]:
+                    - text: Optimization
+                    - generic [ref=f1e220]: "1"
+                  - generic [ref=f1e221]: sam-oduya · 2h ago
+            - button "Add billing + search integration config acme/atlas-api#4815 Changes requested critical risk Security 2 Optimization 1 dana-w · 3h ago" [ref=f1e224] [cursor=pointer]:
+              - generic [ref=f1e230]:
+                - generic [ref=f1e231]:
+                  - generic [ref=f1e232]: Add billing + search integration config
+                  - generic [ref=f1e233]: acme/atlas-api#4815
+                - generic [ref=f1e234]:
+                  - generic [ref=f1e235]: Changes requested
+                  - generic [ref=f1e238]: critical risk
+                  - generic [ref=f1e242]:
+                    - text: Security
+                    - generic [ref=f1e243]: "2"
+                  - generic [ref=f1e244]:
+                    - text: Optimization
+                    - generic [ref=f1e245]: "1"
+                  - generic [ref=f1e246]: dana-w · 3h ago
+          - button "Load 6 more" [ref=f1e250] [cursor=pointer]

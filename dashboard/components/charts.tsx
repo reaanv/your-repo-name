@@ -6,11 +6,20 @@ import type { CategoryCount, TimePoint, TokenPoint, TopIssue } from '@/lib/mock-
 import type { Severity } from '@/lib/types';
 import { cn, formatCompact, formatDay } from '@/lib/utils';
 
+/*
+ * SVG cannot use Tailwind colour utilities on `fill`/`stroke` gradients, so
+ * these read the same custom properties the utilities are generated from.
+ * `var()` is resolved through inline `style` rather than a presentation
+ * attribute because WebKit does not resolve custom properties in the latter.
+ */
+const token = (name: string, alpha = 1) =>
+  alpha === 1 ? `rgb(var(--${name}))` : `rgb(var(--${name}) / ${alpha})`;
+
 const SEVERITY_COLORS: Record<Severity, string> = {
-  security: '#fb7185',
-  bug: '#fbbf24',
-  optimization: '#38bdf8',
-  nit: '#94a3b8',
+  security: token('state-danger'),
+  bug: token('state-warning'),
+  optimization: token('state-info'),
+  nit: token('state-neutral'),
 };
 
 // ---------------------------------------------------------------------------
@@ -49,12 +58,12 @@ export function HealthChart({ points, height = 220 }: { points: TimePoint[]; hei
       >
         <defs>
           <linearGradient id={`${gradientId}-fill`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.38" />
-            <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0" />
+            <stop offset="0%" style={{ stopColor: token('accent'), stopOpacity: 0.3 }} />
+            <stop offset="100%" style={{ stopColor: token('accent'), stopOpacity: 0 }} />
           </linearGradient>
           <linearGradient id={`${gradientId}-stroke`} x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor="#6d28d9" />
-            <stop offset="100%" stopColor="#a78bfa" />
+            <stop offset="0%" style={{ stopColor: token('accent-deep') }} />
+            <stop offset="100%" style={{ stopColor: token('accent-soft') }} />
           </linearGradient>
         </defs>
 
@@ -65,7 +74,7 @@ export function HealthChart({ points, height = 220 }: { points: TimePoint[]; hei
             x2={width - padX}
             y1={toY(value)}
             y2={toY(value)}
-            stroke="rgba(148,163,184,0.12)"
+            style={{ stroke: token('content-muted', 0.35) }}
             strokeDasharray="3 5"
             strokeWidth="1"
             vectorEffect="non-scaling-stroke"
@@ -90,16 +99,16 @@ export function HealthChart({ points, height = 220 }: { points: TimePoint[]; hei
             cx={toX(i)}
             cy={toY(point.value)}
             r={i === points.length - 1 ? 4 : 2.5}
-            fill={i === points.length - 1 ? '#a78bfa' : 'rgba(167,139,250,0.45)'}
+            style={{ fill: i === points.length - 1 ? token('accent-soft') : token('accent', 0.45) }}
           >
             <title>{`${formatDay(point.date)}: ${point.value}/100`}</title>
           </circle>
         ))}
       </svg>
 
-      <figcaption className="mt-2 flex justify-between font-mono text-[0.7rem] text-slate-500">
+      <figcaption className="mt-2 flex justify-between text-[0.7rem] tabular-nums text-content-tertiary">
         <span>{first ? formatDay(first.date) : ''}</span>
-        <span className="text-slate-400">
+        <span className="text-content-secondary">
           now <span className="text-accent-soft">{last?.value ?? 0}</span>/100
         </span>
         <span>{last ? formatDay(last.date) : ''}</span>
@@ -127,7 +136,7 @@ export function TokenChart({ points }: { points: TokenPoint[] }) {
               key={point.date}
               data-testid="token-bar"
               title={`${formatDay(point.date)}: ${formatCompact(point.input)} in / ${formatCompact(point.output)} out`}
-              className="group relative flex-1 rounded-t-[3px] bg-white/[0.04] transition hover:bg-white/[0.08]"
+              className="group relative flex-1 rounded-t-[3px] bg-surface-overlay/50 transition hover:bg-surface-overlay"
               style={{ height: '100%' }}
             >
               <div
@@ -136,7 +145,7 @@ export function TokenChart({ points }: { points: TokenPoint[] }) {
               >
                 <div className="h-full w-full bg-gradient-to-t from-accent-deep to-accent" />
                 <div
-                  className="absolute inset-x-0 top-0 bg-sky-400/80"
+                  className="absolute inset-x-0 top-0 bg-state-info/80"
                   style={{ height: `${outputPct}%` }}
                 />
               </div>
@@ -145,16 +154,16 @@ export function TokenChart({ points }: { points: TokenPoint[] }) {
         })}
       </div>
 
-      <figcaption className="mt-3 flex flex-wrap items-center gap-4 text-xs text-slate-500">
+      <figcaption className="mt-3 flex flex-wrap items-center gap-4 text-xs text-content-tertiary">
         <span className="inline-flex items-center gap-1.5">
           <span className="h-2.5 w-2.5 rounded-sm bg-accent" />
           Input tokens
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <span className="h-2.5 w-2.5 rounded-sm bg-sky-400" />
+          <span className="h-2.5 w-2.5 rounded-sm bg-state-info" />
           Output tokens
         </span>
-        <span className="ml-auto font-mono">
+        <span className="ml-auto tabular-nums">
           {formatCompact(points.reduce((sum, point) => sum + point.input + point.output, 0))} total
         </span>
       </figcaption>
@@ -174,10 +183,10 @@ export function TopIssuesChart({ issues }: { issues: TopIssue[] }) {
       {issues.map((issue) => (
         <li key={issue.label} data-testid="top-issue-row" data-severity={issue.severity}>
           <div className="flex items-baseline justify-between gap-3 text-xs">
-            <span className="truncate text-slate-300">{issue.label}</span>
-            <span className="font-mono text-slate-500">{issue.count}</span>
+            <span className="truncate text-content-secondary">{issue.label}</span>
+            <span className="tabular-nums text-content-tertiary">{issue.count}</span>
           </div>
-          <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-white/[0.05]">
+          <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-surface-overlay">
             <div
               className="h-full rounded-full transition-[width] duration-500"
               style={{
@@ -207,7 +216,14 @@ export function SeverityDonut({ categories }: { categories: CategoryCount[] }) {
   return (
     <div data-testid="severity-donut" className="flex flex-wrap items-center gap-6">
       <svg viewBox="0 0 160 160" role="img" aria-label="Findings by severity" className="h-40 w-40 shrink-0">
-        <circle cx="80" cy="80" r={radius} fill="none" stroke="rgba(148,163,184,0.12)" strokeWidth="18" />
+        <circle
+          cx="80"
+          cy="80"
+          r={radius}
+          fill="none"
+          style={{ stroke: token('content-muted', 0.35) }}
+          strokeWidth="18"
+        />
         {categories.map((category) => {
           const fraction = category.count / total;
           const dash = fraction * circumference;
@@ -234,10 +250,10 @@ export function SeverityDonut({ categories }: { categories: CategoryCount[] }) {
           offset += dash;
           return element;
         })}
-        <text x="80" y="75" textAnchor="middle" className="fill-white font-mono text-[1.4rem] font-semibold">
+        <text x="80" y="75" textAnchor="middle" className="fill-content-primary text-[1.4rem] font-semibold tabular-nums">
           {total}
         </text>
-        <text x="80" y="95" textAnchor="middle" className="fill-slate-500 text-[0.65rem] uppercase tracking-widest">
+        <text x="80" y="95" textAnchor="middle" className="fill-content-tertiary text-[0.65rem] uppercase tracking-widest">
           findings
         </text>
       </svg>
@@ -249,16 +265,16 @@ export function SeverityDonut({ categories }: { categories: CategoryCount[] }) {
             data-testid="donut-legend-row"
             className="flex items-center justify-between gap-3 text-xs"
           >
-            <span className="inline-flex items-center gap-2 text-slate-300">
+            <span className="inline-flex items-center gap-2 text-content-secondary">
               <span
                 className="h-2.5 w-2.5 rounded-sm"
                 style={{ backgroundColor: SEVERITY_COLORS[category.severity] }}
               />
               {category.label}
             </span>
-            <span className="font-mono text-slate-500">
+            <span className="tabular-nums text-content-tertiary">
               {category.count}
-              <span className="ml-1.5 text-slate-600">{Math.round((category.count / total) * 100)}%</span>
+              <span className="ml-1.5 text-content-muted">{Math.round((category.count / total) * 100)}%</span>
             </span>
           </li>
         ))}
@@ -287,11 +303,11 @@ export function ChartPanel({
   testId?: string;
 }) {
   return (
-    <section data-testid={testId} className={cn('glass p-5', className)}>
+    <section data-testid={testId} className={cn('surface p-5', className)}>
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="text-sm font-semibold text-white">{title}</h2>
-          {subtitle ? <p className="mt-1 text-xs text-slate-500">{subtitle}</p> : null}
+          <h2 className="text-sm font-semibold text-content-primary">{title}</h2>
+          {subtitle ? <p className="mt-1 text-xs text-content-tertiary">{subtitle}</p> : null}
         </div>
         {action}
       </div>

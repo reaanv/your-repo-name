@@ -46,6 +46,9 @@ export interface ShimDocument {
 
 export interface ShimWindow {
   readonly document: ShimDocument;
-  getComputedStyle(element: ShimElement): { readonly overflow: string };
+  getComputedStyle(element: ShimElement): {
+    readonly overflow: string;
+    readonly visibility: string;
+  };
   readonly CSS: { escape(value: string): string };
 }

@@ -1,0 +1,216 @@
+- generic [ref=f2e2]:
+  - complementary "Site navigation" [ref=f2e3]:
+    - generic [ref=f2e9]:
+      - generic [ref=f2e10]: PR Reviewer
+      - generic [ref=f2e11]: Agentic CI/CD
+    - navigation "Primary" [ref=f2e12]:
+      - link "Dashboard" [ref=f2e13] [cursor=pointer]:
+        - /url: /
+      - link "PR Reviews" [ref=f2e20] [cursor=pointer]:
+        - /url: /reviews
+      - link "Analytics" [ref=f2e26] [cursor=pointer]:
+        - /url: /analytics
+      - link "Rule Configuration" [ref=f2e30] [cursor=pointer]:
+        - /url: /rules
+      - link "Settings" [ref=f2e33] [cursor=pointer]:
+        - /url: /settings
+    - generic [ref=f2e39]:
+      - paragraph [ref=f2e40]: Fail-closed pipeline
+      - paragraph [ref=f2e41]: Diffs are redacted before they leave the runner, and a schema violation blocks the review instead of posting it.
+  - generic [ref=f2e42]:
+    - banner [ref=f2e43]:
+      - generic [ref=f2e44]:
+        - heading "Analytics" [level=1] [ref=f2e45]
+        - generic [ref=f2e46]: Agent online
+        - generic [ref=f2e48]:
+          - generic [ref=f2e49]: Synced 1m ago
+          - button "Sync now" [ref=f2e50] [cursor=pointer]
+          - button "Account menu" [ref=f2e58] [cursor=pointer]
+    - main [ref=f2e62]:
+      - generic [ref=f2e63]:
+        - generic [ref=f2e64]:
+          - heading "Analytics" [level=2] [ref=f2e65]
+          - paragraph [ref=f2e66]: Code health over time, the issue categories the reviewer surfaces most, and what the pipeline costs in tokens.
+        - generic [ref=f2e67]:
+          - generic [ref=f2e68]:
+            - paragraph [ref=f2e69]: Aggregated across every repository the reviewer is installed on.
+            - group "Select time range" [ref=f2e70]:
+              - button "7d" [ref=f2e71] [cursor=pointer]
+              - button "30d" [pressed] [ref=f2e72] [cursor=pointer]
+              - button "90d" [ref=f2e73] [cursor=pointer]
+          - generic [ref=f2e74]:
+            - article [ref=f2e75]:
+              - paragraph [ref=f2e77]: Code health score
+              - paragraph [ref=f2e82]: 88/100
+              - generic [ref=f2e83]:
+                - generic [ref=f2e84]: "+22"
+                - generic [ref=f2e88]: vs 30d ago
+            - article [ref=f2e89]:
+              - paragraph [ref=f2e91]: Findings surfaced
+              - paragraph [ref=f2e96]: "410"
+              - generic [ref=f2e97]:
+                - generic [ref=f2e98]: "+12"
+                - generic [ref=f2e102]: vs previous period
+            - article [ref=f2e103]:
+              - paragraph [ref=f2e105]: Security share
+              - paragraph [ref=f2e110]: 21%
+              - generic [ref=f2e111]:
+                - generic [ref=f2e112]: "-4"
+                - generic [ref=f2e116]: of all findings
+            - article [ref=f2e117]:
+              - paragraph [ref=f2e119]: Tokens consumed
+              - paragraph [ref=f2e126]: 4.5M
+              - generic [ref=f2e127]:
+                - generic [ref=f2e128]: "+8"
+                - generic [ref=f2e132]: 150k/day avg
+          - generic [ref=f2e133]:
+            - generic [ref=f2e135]:
+              - heading "Code health over time" [level=2] [ref=f2e136]
+              - paragraph [ref=f2e137]: Composite score derived from finding density, severity mix, and resolution rate, last 30 days.
+            - figure "Jul 5 now 88/100 Aug 3" [ref=f2e138]:
+              - img "Code health score over the last 30 days, currently 88 out of 100" [ref=f2e139]:
+                - 'generic "Jul 5: 66/100" [ref=f2e142]'
+                - 'generic "Jul 6: 59/100" [ref=f2e143]'
+                - 'generic "Jul 7: 68/100" [ref=f2e144]'
+                - 'generic "Jul 8: 68/100" [ref=f2e145]'
+                - 'generic "Jul 9: 63/100" [ref=f2e146]'
+                - 'generic "Jul 10: 64/100" [ref=f2e147]'
+                - 'generic "Jul 11: 66/100" [ref=f2e148]'
+                - 'generic "Jul 12: 72/100" [ref=f2e149]'
+                - 'generic "Jul 13: 71/100" [ref=f2e150]'
+                - 'generic "Jul 14: 72/100" [ref=f2e151]'
+                - 'generic "Jul 15: 71/100" [ref=f2e152]'
+                - 'generic "Jul 16: 70/100" [ref=f2e153]'
+                - 'generic "Jul 17: 70/100" [ref=f2e154]'
+                - 'generic "Jul 18: 75/100" [ref=f2e155]'
+                - 'generic "Jul 19: 78/100" [ref=f2e156]'
+                - 'generic "Jul 20: 78/100" [ref=f2e157]'
+                - 'generic "Jul 21: 75/100" [ref=f2e158]'
+                - 'generic "Jul 22: 78/100" [ref=f2e159]'
+                - 'generic "Jul 23: 74/100" [ref=f2e160]'
+                - 'generic "Jul 24: 69/100" [ref=f2e161]'
+                - 'generic "Jul 25: 84/100" [ref=f2e162]'
+                - 'generic "Jul 26: 83/100" [ref=f2e163]'
+                - 'generic "Jul 27: 78/100" [ref=f2e164]'
+                - 'generic "Jul 28: 81/100" [ref=f2e165]'
+                - 'generic "Jul 29: 85/100" [ref=f2e166]'
+                - 'generic "Jul 30: 85/100" [ref=f2e167]'
+                - 'generic "Jul 31: 87/100" [ref=f2e168]'
+                - 'generic "Aug 1: 88/100" [ref=f2e169]'
+                - 'generic "Aug 2: 91/100" [ref=f2e170]'
+                - 'generic "Aug 3: 88/100" [ref=f2e171]'
+              - generic [ref=f2e172]:
+                - generic [ref=f2e173]: Jul 5
+                - generic [ref=f2e174]: now 88/100
+                - generic [ref=f2e175]: Aug 3
+          - generic [ref=f2e176]:
+            - generic [ref=f2e177]:
+              - generic [ref=f2e179]:
+                - heading "Top issue categories" [level=2] [ref=f2e180]
+                - paragraph [ref=f2e181]: Most frequent finding types across all reviewed pull requests.
+              - list [ref=f2e182]:
+                - listitem [ref=f2e183]:
+                  - generic [ref=f2e184]:
+                    - generic [ref=f2e185]: Unvalidated user input
+                    - generic [ref=f2e186]: "110"
+                - listitem [ref=f2e189]:
+                  - generic [ref=f2e190]:
+                    - generic [ref=f2e191]: Missing null / undefined guard
+                    - generic [ref=f2e192]: "96"
+                - listitem [ref=f2e195]:
+                  - generic [ref=f2e196]:
+                    - generic [ref=f2e197]: Unhandled promise rejection
+                    - generic [ref=f2e198]: "87"
+                - listitem [ref=f2e201]:
+                  - generic [ref=f2e202]:
+                    - generic [ref=f2e203]: N+1 database query
+                    - generic [ref=f2e204]: "78"
+                - listitem [ref=f2e207]:
+                  - generic [ref=f2e208]:
+                    - generic [ref=f2e209]: Hardcoded credential
+                    - generic [ref=f2e210]: "62"
+                - listitem [ref=f2e213]:
+                  - generic [ref=f2e214]:
+                    - generic [ref=f2e215]: Missing dependency array
+                    - generic [ref=f2e216]: "57"
+                - listitem [ref=f2e219]:
+                  - generic [ref=f2e220]:
+                    - generic [ref=f2e221]: Unnecessary re-render
+                    - generic [ref=f2e222]: "42"
+                - listitem [ref=f2e225]:
+                  - generic [ref=f2e226]:
+                    - generic [ref=f2e227]: Inconsistent naming
+                    - generic [ref=f2e228]: "33"
+            - generic [ref=f2e231]:
+              - generic [ref=f2e233]:
+                - heading "Severity distribution" [level=2] [ref=f2e234]
+                - paragraph [ref=f2e235]: How findings break down by severity band.
+              - generic [ref=f2e236]:
+                - img "Findings by severity" [ref=f2e237]:
+                  - 'generic "Security: 86" [ref=f2e239]'
+                  - 'generic "Bug: 153" [ref=f2e240]'
+                  - 'generic "Optimization: 116" [ref=f2e241]'
+                  - 'generic "Nit: 55" [ref=f2e242]'
+                  - generic [ref=f2e243]: "410"
+                  - generic [ref=f2e244]: findings
+                - list [ref=f2e245]:
+                  - listitem [ref=f2e246]:
+                    - generic [ref=f2e247]: Security
+                    - generic [ref=f2e249]:
+                      - text: "86"
+                      - generic [ref=f2e250]: 21%
+                  - listitem [ref=f2e251]:
+                    - generic [ref=f2e252]: Bug
+                    - generic [ref=f2e254]:
+                      - text: "153"
+                      - generic [ref=f2e255]: 37%
+                  - listitem [ref=f2e256]:
+                    - generic [ref=f2e257]: Optimization
+                    - generic [ref=f2e259]:
+                      - text: "116"
+                      - generic [ref=f2e260]: 28%
+                  - listitem [ref=f2e261]:
+                    - generic [ref=f2e262]: Nit
+                    - generic [ref=f2e264]:
+                      - text: "55"
+                      - generic [ref=f2e265]: 13%
+          - generic [ref=f2e266]:
+            - generic [ref=f2e268]:
+              - heading "Token usage" [level=2] [ref=f2e269]
+              - paragraph [ref=f2e270]: Input and output tokens billed to the Anthropic API per day.
+            - figure "Input tokens Output tokens 4.5M total" [ref=f2e271]:
+              - generic [ref=f2e272]:
+                - 'generic "Jul 5: 60k in / 8.1k out" [ref=f2e273]'
+                - 'generic "Jul 6: 196k in / 27k out" [ref=f2e277]'
+                - 'generic "Jul 7: 184k in / 25k out" [ref=f2e281]'
+                - 'generic "Jul 8: 145k in / 19k out" [ref=f2e285]'
+                - 'generic "Jul 9: 134k in / 16k out" [ref=f2e289]'
+                - 'generic "Jul 10: 218k in / 30k out" [ref=f2e293]'
+                - 'generic "Jul 11: 44k in / 5.2k out" [ref=f2e297]'
+                - 'generic "Jul 12: 29k in / 3.8k out" [ref=f2e301]'
+                - 'generic "Jul 13: 149k in / 15k out" [ref=f2e305]'
+                - 'generic "Jul 14: 151k in / 22k out" [ref=f2e309]'
+                - 'generic "Jul 15: 198k in / 21k out" [ref=f2e313]'
+                - 'generic "Jul 16: 204k in / 21k out" [ref=f2e317]'
+                - 'generic "Jul 17: 183k in / 24k out" [ref=f2e321]'
+                - 'generic "Jul 18: 57k in / 6.4k out" [ref=f2e325]'
+                - 'generic "Jul 19: 60k in / 6.2k out" [ref=f2e329]'
+                - 'generic "Jul 20: 167k in / 18k out" [ref=f2e333]'
+                - 'generic "Jul 21: 178k in / 22k out" [ref=f2e337]'
+                - 'generic "Jul 22: 117k in / 16k out" [ref=f2e341]'
+                - 'generic "Jul 23: 215k in / 23k out" [ref=f2e345]'
+                - 'generic "Jul 24: 126k in / 15k out" [ref=f2e349]'
+                - 'generic "Jul 25: 28k in / 4.2k out" [ref=f2e353]'
+                - 'generic "Jul 26: 62k in / 7.2k out" [ref=f2e357]'
+                - 'generic "Jul 27: 147k in / 19k out" [ref=f2e361]'
+                - 'generic "Jul 28: 110k in / 16k out" [ref=f2e365]'
+                - 'generic "Jul 29: 154k in / 17k out" [ref=f2e369]'
+                - 'generic "Jul 30: 224k in / 23k out" [ref=f2e373]'
+                - 'generic "Jul 31: 197k in / 24k out" [ref=f2e377]'
+                - 'generic "Aug 1: 54k in / 6.0k out" [ref=f2e381]'
+                - 'generic "Aug 2: 38k in / 4.3k out" [ref=f2e385]'
+                - 'generic "Aug 3: 175k in / 24k out" [ref=f2e389]'
+              - generic [ref=f2e393]:
+                - generic [ref=f2e394]: Input tokens
+                - generic [ref=f2e396]: Output tokens
+                - generic [ref=f2e398]: 4.5M total

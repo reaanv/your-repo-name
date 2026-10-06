@@ -1,43 +1,53 @@
 # Grocery Price Compare — Architecture & Plan
 
-**Goal:** Mom types one product ("Al Rawabi milk 1L"). The system checks Noon Minutes, Careem Quik, Amazon Now and Deliveroo HOP (plus Talabat Mart, see §1) and tells her where it's cheapest, then opens that app so she can buy it.
+**Goal:** Mom types one product ("Almarai milk 1L"). The system checks **Noon Minutes, Careem Quik and Amazon Now** for her Dubai address, tells her where it's cheapest, and opens that app so she can buy it.
 
-**Status:** Plan only. Nothing here has been validated against the live platforms yet. Anything marked **UNVERIFIED** is an assumption, and Phase 0 is there to check it.
+**Constraints (decided):**
+- **Mom-only.**
+- **$0 running cost.**
+- **Dubai.**
+- **New dedicated repo** when the build starts.
+
+See §15 for every decision and why.
+
+**Status:** Design done. The Phase 0 web probe is done (see [`PHASE0_FINDINGS.md`](./PHASE0_FINDINGS.md)). The manual checks and the value survey are **not done yet**. The build backlog is in [`BUILD_PLAN.md`](./BUILD_PLAN.md).
+
+> **Phase 0 result in one line:** only Noon Minutes is reachable on the web without login. Amazon Now needs sign-in to browse. Careem Quik is app-only. On the free, low-risk path, v1 compares Noon vs Amazon at best. Careem is a pending decision (PHASE0 §3.3).
 
 ---
 
-## 0. Read this first: what will actually decide if this works
+## 0. Risks that decide whether this works
 
-| # | Risk | Why it matters | Mitigation in this plan |
-|---|------|----------------|-------------------------|
-| R1 | **There are no public APIs to "connect later."** Noon Minutes, Careem Quik and Deliveroo HOP publish no consumer product/price API. Amazon's PA-API 5 was retired on **May 15, 2026**. Its successor, the Creators API, is for Associates (affiliates), and nothing confirms it exposes Amazon Now dark-store stock or pricing (**UNVERIFIED**). | "Connect the API later" assumes something that doesn't exist. The data has to come from scraping, private app APIs or a paid data vendor. | Adapter interface that doesn't care where data comes from (§4). Phase 0 feasibility spike with a go/no-go gate (§11). |
-| R2 | **Terms of Service and legal exposure.** The ToS of these platforms very likely prohibit automated access. I have not read each one. UAE Federal Decree-Law No. 34 of 2021 (cybercrime) covers unauthorized access to information systems. Scraping public pages is a grey area. Getting around logins, anti-bot systems or app certificate pinning is clearly riskier. *Not legal advice.* | For personal use the practical risk is mainly an **account ban on mom's real accounts**. If this ever becomes a product, the risk profile changes completely. | Low request volume, watchlist-first design (§3), no use of mom's main accounts for collection, legal review before any commercial use. |
-| R3 | **Prices and stock depend on location.** Quick-commerce runs out of dark stores, so what's available (and sometimes the price) depends on the delivery address. | A price fetched for the wrong area is wrong. | Every fetch is tied to a delivery zone (`GeoContext`). |
-| R4 | **"Cheapest item" ≠ "cheapest order."** Delivery fees, small-order fees, service fees and memberships (Prime, noon One, Careem Plus, Talabat Pro, Deliveroo Plus) often decide the real winner. Amazon Now: free delivery for Prime members on orders over AED 25, otherwise about AED 6. | Showing only the shelf price will regularly point her to the more expensive option. | Fee schedules plus her memberships go into the pricing engine. Basket mode compares whole orders (§7). |
-| R5 | **Product matching is the real engineering problem, not scraping.** "Almarai Full Fat Milk 1L" vs "Almarai Fresh Milk Full Cream 1 Litre" vs "Almarai Milk 4x1L". | A wrong match means a wrong "cheapest" claim. | Size/brand parser, confidence tiers, **one-time human confirmation for her usual items** (§6). |
-| R6 | **Silent adapter failure turns the tool into a liar.** If the Careem adapter breaks and results quietly exclude it, "cheapest" becomes false. | Scrapers break every time a site changes its markup. | Each platform's status is always shown ("Careem Quik: couldn't check"), plus daily canaries and alerts to *you*, not mom (§10). |
-| R7 | **The value may be small.** I have no data on how far staple prices actually differ between these apps. | If the gap is a few dirhams a week, this costs more in maintenance than it saves. | **Phase 0 includes a manual price survey.** Measure before you build (§11). |
-
-**Missing from your list:** **Talabat Mart** is arguably the biggest quick-commerce grocery player in the UAE. InstaShop and El Grocer are marketplace aggregators. The plan treats platforms as plugins, so adding any of them is just another adapter.
+| # | Risk | Why it matters | Mitigation |
+|---|------|----------------|------------|
+| R1 | **There's no API to connect to.** None of the 3 platforms publishes a consumer price API. Amazon PA-API 5 was retired 2026-05-15, and its successor (the Creators API) is an affiliate tool with no known Amazon Now coverage. | Data comes from public web pages, logged-in sessions or by hand. | Adapter interface that doesn't care where data comes from (§4). The access route for each platform is settled in Phase 0 (§11). |
+| R2 | **ToS and legal exposure.** Platform ToS very likely forbid automated access. Amazon's Conditions of Use explicitly do. UAE Federal Decree-Law No. 34 of 2021 covers unauthorized access to information systems. Reading public pages is a grey area. Getting around logins, anti-bot or app pinning is riskier. *Not legal advice.* | For a personal tool, the realistic cost is **a banned account**. | Public pages only where possible. Respect robots.txt. Low volume. **Never automate mom's real accounts.** |
+| R3 | **Prices and stock depend on location.** Dark stores carry different stock, and maybe different prices. Noon's web pages show prices with **no address set**. | A price from a different zone is wrong for mom. | PHASE0 §4 step 2 checks whether the address changes Noon's prices. Every fetch is tied to a `zoneId`. |
+| R4 | **The cheapest item isn't always the cheapest order.** Fees and memberships (Prime, noon One, Careem Plus) flip results. Amazon Now: free over AED 25 for Prime, otherwise AED 6. | Showing only shelf prices will mislead her. | Fee schedules + her memberships feed the pricing engine (§7). |
+| R5 | **Matching is the hard part.** Real Noon data contains ads, combo bundles and size strings like `Packaging May Vary4x1L`. | A wrong match means a false "cheapest". | Rule-based parser, combo exclusion, **human-confirmed watchlist** (§6). |
+| R6 | **Silent adapter failure.** | The tool quietly lies. | Every platform's status is always shown, plus a daily canary with a Telegram alert to you (§10). |
+| R7 | **Value unproven.** | Upkeep may cost more than it saves. | Value gate in PHASE0 §4: under AED 15/week → stop. |
+| R8 | **Scope is narrow.** Talabat Mart and Deliveroo HOP were excluded on purpose, and Careem may drop out (R1). | "Cheapest" only means cheapest among the apps we checked. | The UI always says which apps were compared. |
 
 ---
 
 ## 1. Scope
 
 **In (v1)**
-- One user (mom) with one or two saved addresses.
-- Search for a product → per-platform price, stock, "cheapest" badge, a button that opens the platform's app.
-- Her usual items ("watchlist") are refreshed on a schedule, so search is instant for the things she actually buys.
-- Delivery fees and memberships are taken into account.
+- One user (mom), one Dubai address.
+- Search → per-platform price, stock, "cheapest" badge, a deep link to the app.
+- A watchlist of her usual items, refreshed on a schedule. Search is instant for what she actually buys.
+- Delivery fees and her memberships.
 
 **In (v2)**
-- Basket compare: "my weekly list costs AED X on Noon vs AED Y on Careem".
+- Basket compare.
 - Price-drop alerts.
-- WhatsApp or voice interface.
+- Voice input polish.
 
-**Out (explicitly)**
-- Checkout or ordering inside our app. We only deep-link to the platform. Automated ordering multiplies the legal and account risk and adds nothing at this stage.
-- Multi-user / public launch (needs a different data strategy, see R2).
+**Out**
+- Ordering or checkout inside our app (deep-link only).
+- Multiple users, public launch.
+- Anything with a recurring cost: paid data feeds, paid LLM calls, paid browser agents, paid hosting.
 
 ---
 
@@ -45,76 +55,66 @@
 
 ```mermaid
 flowchart LR
-  subgraph Client
-    PWA["Mom's PWA<br/>search box, big buttons"]
-    WA["WhatsApp bot (v2)"]
+  subgraph Phone["Mom's phone"]
+    PWA["PWA<br/>search box, big buttons"]
   end
 
-  subgraph Core["Core service (one long-running Node process)"]
+  subgraph Home["Home machine in Dubai (Docker)"]
     API["HTTP API<br/>/search /basket /watchlist /health"]
-    ORCH["Search orchestrator<br/>cache check, fan-out,<br/>timeouts, streaming"]
+    ORCH["Search orchestrator<br/>cache check, fan-out,<br/>timeouts, SSE"]
     NORM["Normalizer + Matcher"]
     PRICE["Pricing engine<br/>fees, memberships, basket"]
     SCHED["Scheduler<br/>watchlist refresh, canaries"]
+    DB[("SQLite<br/>products, listings,<br/>price_snapshots, fees")]
+    A1["Noon Minutes adapter<br/>(web, Playwright)"]
+    A2["Amazon Now adapter<br/>(logged-in session, conditional)"]
+    A3["Careem Quik adapter<br/>(manual entry or off)"]
   end
 
-  subgraph Collectors["Collectors (same box at first)"]
-    A1["Noon Minutes adapter"]
-    A2["Careem Quik adapter"]
-    A3["Amazon Now adapter"]
-    A4["Deliveroo HOP adapter"]
-    A5["Talabat Mart adapter"]
-  end
+  CF["Tailscale Funnel<br/>HTTPS *.ts.net URL (free)"]
+  TG["Telegram bot<br/>alerts to you"]
 
-  DB[("Postgres<br/>products, listings,<br/>price_snapshots, fees")]
-  ALERT["Alerts to you<br/>(adapter broken)"]
-
-  PWA --> API
-  WA --> API
+  PWA --> CF --> API
   API --> ORCH
   API --> PRICE
-  ORCH -->|"fresh in cache"| DB
-  ORCH -->|"stale / miss"| A1 & A2 & A3 & A4 & A5
-  A1 & A2 & A3 & A4 & A5 --> NORM --> DB
+  ORCH -->|"fresh"| DB
+  ORCH -->|"stale / miss"| A1 & A2 & A3
+  A1 & A2 & A3 --> NORM --> DB
   PRICE --> DB
-  SCHED --> A1 & A2 & A3 & A4 & A5
-  SCHED --> ALERT
+  SCHED --> A1 & A2 & A3
+  SCHED --> TG
 ```
 
 **Key decisions**
-
-1. **Modular monolith, not microservices.** One user, five data sources. Microservices would add ops cost and buy nothing.
-2. **Long-running process, not serverless, for collectors.** Headless browsers on Vercel or Lambda are slow to start, hit timeouts and run from datacenter IPs that anti-bot systems block first. The PWA can still live on Vercel if you like.
-3. **Collectors can move to a home box later.** A Raspberry Pi or old laptop at home gives a residential IP, which anti-bot systems block far less than cloud IPs. The adapter code is the same, only the process location changes. Connect it via Cloudflare Tunnel or Tailscale.
-4. **Postgres is the cache.** No Redis. "Latest price per listing" is an indexed query. Add Redis only if a measurement says so.
+1. **A single program, split into modules, on one home machine.** One user, three sources. Nothing more is justified.
+2. **Home machine, not the cloud.** Noon's Cloudflare blocked a US cloud IP but let a UAE IP through (PHASE0 §2.1). A Dubai home connection is the most reliable vantage point, and it's free. Fallback is an Oracle Cloud Always Free VM (more likely to be blocked).
+3. **Tailscale Funnel** gives mom a public HTTPS URL (`https://<machine>.<tailnet>.ts.net`) without opening router ports. It's free on Tailscale's personal plan (**verify at setup**). Access is gated by an unguessable link token stored in her installed PWA. *Why not Cloudflare Tunnel + Access?* A stable named tunnel and Access both need a domain you own on Cloudflare (~USD 10/yr), which breaks the $0 rule. Use it only if you already own a domain.
+4. **SQLite.** One user, one process, one file to back up. FTS5 with the `trigram` tokenizer gives **substring** search ("mara" finds "Almarai"). It does **not** tolerate typos. Typo tolerance ("almari") is done in app code by comparing trigram overlap on the candidate set. No Postgres, no Redis, no Supabase (its free tier pauses inactive projects).
 
 ---
 
-## 3. The core design choice: watchlist-first, search-second
+## 3. Core design choice: watchlist-first, search-second
 
-Mom doesn't buy 4,000 SKUs. She probably buys 50–150 items over and over (**UNVERIFIED**, check her order history).
+Mom probably buys 50–150 repeat items (**UNVERIFIED**, take this from her order history).
 
-| | Live search on every query | Watchlist-first (recommended) |
+| | Live search per query | Watchlist-first (chosen) |
 |---|---|---|
-| Latency | 3–15 s (slowest platform wins) | < 300 ms from DB |
-| Requests to platforms | Every search × 5 | ~150 items × 5 platforms × 2–3/day |
-| Ban risk | Higher, bursty | Lower, steady and predictable |
-| Match quality | Automatic every time, error-prone | **Human-confirmed once**, then exact |
-| Works when an adapter is down | No | Shows last known price with its age |
+| Latency | 3–15 s | < 300 ms from SQLite |
+| Requests to platforms | Every search × 3 | ~150 items × 2–3 platforms × 2–3/day ≈ 600–1,350/day, spread out |
+| Ban risk | Bursty | Low, steady |
+| Match quality | Automatic, error-prone | **Human-confirmed once** |
+| Adapter down | No result | Last known price with its age |
 
-**Flow:** Search hits the DB first. A miss, or data older than the freshness threshold, triggers a live fan-out. Anything she searches for more than twice gets suggested for the watchlist automatically (from `search_log`).
+Search hits SQLite first. A miss or stale data triggers a live fan-out. Anything searched for more than twice gets suggested for the watchlist (from `search_log`).
 
 ---
 
-## 4. Platform adapter contract (the "connect API later" seam)
-
-Every data source sits behind one interface. The rest of the system never knows whether prices came from an official API, a paid feed, a headless browser or a test fixture.
+## 4. Platform adapter contract
 
 ```ts
 // packages/core/src/adapter.ts
 
-export type PlatformId =
-  | 'noon_minutes' | 'careem_quik' | 'amazon_now' | 'deliveroo_hop' | 'talabat_mart';
+export type PlatformId = 'noon_minutes' | 'careem_quik' | 'amazon_now';
 
 /** Money is integer fils (AED × 100). Never floats. */
 export type Fils = number;
@@ -122,10 +122,10 @@ export type Fils = number;
 export interface GeoContext {
   lat: number;
   lng: number;
-  zoneId: string;          // our own bucketing of addresses -> dark-store zone
+  zoneId: string;          // our bucketing of an address -> dark-store zone
 }
 
-export type DataSource = 'official_api' | 'vendor_feed' | 'web' | 'app_api' | 'manual' | 'fixture';
+export type DataSource = 'web' | 'web_logged_in' | 'app_api' | 'manual' | 'fixture';
 
 export interface RawListing {
   platform: PlatformId;
@@ -133,13 +133,15 @@ export interface RawListing {
   title: string;
   brand?: string;
   sizeText?: string;        // as shown, e.g. "6 x 200 ml"
-  price: Fils;              // current selling price
-  wasPrice?: Fils;          // strikethrough price, if shown
-  promoText?: string;       // "Buy 2 get 1" – displayed, NOT auto-applied
+  price: Fils;
+  wasPrice?: Fils;
+  promoText?: string;       // displayed, NOT auto-applied
+  isSponsored: boolean;     // "Ad" tiles in search results
+  isBundle: boolean;        // combo packs, excluded from single-item matching
   inStock: boolean;
   imageUrl?: string;
-  deepLink?: string;        // opens product in platform app/web
-  gtin?: string;            // barcode, if the platform exposes it
+  deepLink?: string;
+  gtin?: string;
   fetchedAt: string;        // ISO-8601
   source: DataSource;
 }
@@ -147,17 +149,18 @@ export interface RawListing {
 export interface FeeSchedule {
   platform: PlatformId;
   zoneId: string;
-  membership: string | null;      // 'prime' | 'noon_one' | 'careem_plus' | ...
+  membership: string | null;      // 'prime' | 'noon_one' | 'careem_plus' | null
   minOrder?: Fils;
   deliveryFee: Fils;
   freeDeliveryThreshold?: Fils;
   smallOrderFee?: Fils;
   smallOrderThreshold?: Fils;
   serviceFeePct?: number;
-  fetchedAt: string;
+  checkedAt: string;
+  source: 'manual' | 'web';
 }
 
-export type AdapterStatus = 'ok' | 'timeout' | 'blocked' | 'not_serviceable' | 'error';
+export type AdapterStatus = 'ok' | 'timeout' | 'blocked' | 'login_required' | 'not_serviceable' | 'disabled' | 'error';
 
 export interface AdapterResult<T> {
   platform: PlatformId;
@@ -169,30 +172,39 @@ export interface AdapterResult<T> {
 
 export interface PlatformAdapter {
   readonly id: PlatformId;
-  readonly capabilities: { search: boolean; lookupBySku: boolean; fees: boolean };
+  readonly capabilities: { search: boolean; lookupBySku: boolean };
   search(q: string, geo: GeoContext, signal: AbortSignal): Promise<AdapterResult<RawListing[]>>;
   lookup(skus: string[], geo: GeoContext, signal: AbortSignal): Promise<AdapterResult<RawListing[]>>;
-  fees(geo: GeoContext, membership: string | null): Promise<AdapterResult<FeeSchedule>>;
 }
 ```
 
+Fee schedules are **entered by hand and re-checked monthly** (PHASE0 §4 step 5). They change rarely, and scraping checkout pages isn't worth it.
+
 **Rules every adapter must follow**
-- Never throw to the orchestrator. Return a `status` instead.
-- Respect `AbortSignal`. The orchestrator gives each platform a time budget (default 6 s live, 60 s scheduled).
-- Its own rate limiter (token bucket + jitter) and a circuit breaker: after 3 consecutive `blocked` results, stop for 1 hour and alert.
-- Ship with **recorded fixtures** (`fixtures/*.json|html`) that the contract tests run against.
+- Never throw. Return a `status`.
+- Respect `AbortSignal`. Budgets: 6 s for live search, 60 s for scheduled runs.
+- **Respect robots.txt.** For Noon: HTML pages only, **never** `/_svc/` or `/_serverFn/`.
+- Token-bucket rate limit (≤ 1 request per 3–5 s per platform, with jitter), plus a **hard daily cap**.
+- Circuit breaker: after 3 consecutive `blocked` or `login_required` results, pause for 6 h and send a Telegram alert.
+- Ship with recorded fixtures (`fixtures/*.html`) and contract tests.
 
-### Data acquisition options, per adapter (cheapest/safest first)
+### Data sources
 
-| Tier | Source | Pros | Cons |
-|---|---|---|---|
-| 1 | Official / partner API | Stable, legal | Basically none exist here (R1) |
-| 2 | Licensed data vendor (several firms advertise UAE quick-commerce price feeds) | Someone else deals with breakage and legal posture | Costs money, unknown quality and freshness (**UNVERIFIED**) |
-| 3 | Public web pages via Playwright | Simple, visible data | Only works if the platform has a web storefront (**UNVERIFIED** for Careem Quik and Noon Minutes) |
-| 4 | Private mobile-app API (traffic interception) | Most complete data | Most fragile, clearest ToS breach, may need auth tokens and pinning bypass |
-| 5 | Manual / share-sheet: mom shares a product link or screenshot, a vision model extracts the price | Low risk | Not automatic, which defeats the point for everyday use |
+| Tier | Source | Status under the $0 constraint |
+|---|---|---|
+| 1 | Official / partner API | None exist (R1) |
+| 2 | Paid data vendor | **Excluded** ($0) |
+| 3 | Public web pages via Playwright | **Noon Minutes** |
+| 3b | Web pages with a logged-in **throwaway** account | **Amazon Now**, if a non-Prime throwaway account can see prices (PHASE0 §3.2) |
+| 4 | Intercepting the app's private API | Careem option A. **Not chosen.** Highest risk. |
+| 5 | Manual entry | Careem option B, Amazon fallback |
+| — | Paid browser agents (Jev, Firecrawl, etc.) | **Dev/debug only.** Phase 0 probing, diagnosing a broken adapter. Never in the runtime path (cost grows with use, results aren't repeatable). |
 
-The adapter interface makes this a **per-platform** choice that you can change later without touching anything else.
+| Platform | v1 source | Notes |
+|---|---|---|
+| Noon Minutes | Tier 3: search page + product pages by SKU | Product URLs are public in sitemaps |
+| Amazon Now | Tier 3b or 5 | Decided by PHASE0 §4 step 3 |
+| Careem Quik | Off (C) or manual (B) | **Your decision**, PHASE0 §3.3 |
 
 ---
 
@@ -203,15 +215,15 @@ sequenceDiagram
   participant M as Mom (PWA)
   participant API as API
   participant O as Orchestrator
-  participant DB as Postgres
-  participant A as Adapters (x5, parallel)
+  participant DB as SQLite
+  participant A as Adapters (parallel)
 
-  M->>API: GET /search?q=almarai milk 1l&address=home
+  M->>API: GET /api/search?q=almarai milk 1l
   API->>O: search(q, geo)
   O->>DB: matched products + latest prices (age < 4h)
   DB-->>O: hits
   O-->>M: stream: cached results immediately
-  par for each stale/missing platform
+  par each enabled platform that is stale or missing
     O->>A: search(q, geo, 6s budget)
     A-->>O: AdapterResult
     O->>DB: upsert listings, append snapshots, match
@@ -220,156 +232,154 @@ sequenceDiagram
   O-->>M: stream: final ranking + done
 ```
 
-Transport is **Server-Sent Events**, so one slow platform never blocks the screen. Every price on screen shows its age ("2h ago").
+Results stream to her phone as they arrive (Server-Sent Events). Every price shows its age. Disabled platforms show "not compared".
 
 ---
 
 ## 6. Normalization & matching
 
-**Normalizer** (pure functions, heavily unit-tested):
-- Parse size: `1L`, `1 Litre`, `1000ml`, `6 x 200 ml`, `2kg`, `12 pcs`, and Arabic numerals/units. Output: `{ value, unit: 'ml'|'g'|'pc', packCount }`.
-- Unit price: fils per 100 ml / 100 g / piece, so alternatives can be compared fairly.
-- Brand dictionary (seeded by hand: Almarai, Al Rawabi, Al Ain, Lacnor, Nestlé...) plus alias handling.
-- Strip noise: "Fresh", "New", "Pack of", promo text, emoji.
+**Normalizer** (pure functions, unit-tested against the corpus in BUILD_PLAN):
+- Size parsing, including the real Noon cases: `1L`, `500ml`, `1 Gallon`, `1Kg`, `4x1L`, `18x125ml`, `(4 x 66g)`, `Packaging May Vary4x1L`, `150g - 8.5g Protein`, `120g - 8 Triangles`. Output: `{ value, unit: 'ml'|'g'|'pc', packCount }`.
+- Unit price in fils per 100 ml / 100 g / piece.
+- Brand dictionary seeded by hand (Almarai, Al Rawabi, Al Ain, Nadec, Lacnor, MLK, Nestlé…). Prefer the platform's separate brand field over the title.
+- Strip noise: "Packaging Disclaimer…", "Promo Pack", "New", "Exclusive", protein claims.
 
-**Matcher**, which turns `RawListing` into a canonical `product`:
+**Matcher**
 
-| Step | Method | Result |
+| Step | Rule | Result |
 |---|---|---|
-| 1 | GTIN equal | `exact`, auto |
-| 2 | Brand equal **and** size equal **and** trigram similarity of the rest ≥ 0.6 | `exact`, auto |
-| 3 | Brand + size equal, similarity 0.35–0.6 | `probable`, sent to LLM adjudication (cheap model, cached decision) or human review |
-| 4 | Same category, different brand or size | `alternative`, shown separately with unit price |
-| 5 | Else | no match |
+| 0 | `isBundle` (e.g. "… Combo", Noon SKU pattern `V…V-1`) | Excluded from single-item matching |
+| 1 | Same barcode (GTIN) | `exact`, auto |
+| 2 | Brand equal **and** size equal **and** fat/variant keywords equal **and** trigram Jaccard similarity of the remaining title tokens ≥ 0.6 (computed in app code) | `exact`, auto |
+| 3 | Brand + size equal, similarity 0.35–0.6 | `probable` → **human review queue** (you, in an admin screen) |
+| 4 | Same category, different brand or size | `alternative`, shown with unit price |
+| 5 | Else | No match |
 
-- **Watchlist items are human-confirmed once** (`match_method = 'human'`). That's the highest-value 30 minutes in the whole project.
-- An LLM is **optional** and only runs on new, ambiguous listings. Its decision is stored, so it never re-runs per search.
-- The UI never calls a `probable` match "the same product". It says "looks like the same item".
+- Variant keywords matter: "Full Fat" ≠ "Low Fat" ≠ "Fat Free", and "Fresh" ≠ "Long Life". A rule that ignores them would match items wrongly.
+- No LLM. Ambiguous cases go to you once and the decision is stored.
+- Watchlist items are human-confirmed (`match_method = 'human'`).
 
 ---
 
 ## 7. Pricing engine
 
-**Single item** (default view):
+**Single item:**
 ```
-shelf_price   = listing.price                     (promos shown, not applied)
-landed_price  = shelf_price + fees(platform, subtotal = shelf_price, membership)
+shelf_price  = listing.price
+landed_price = shelf_price + applicable fees(platform, subtotal = shelf_price, membership)
 ```
-Show both. "Cheapest" is ranked by **shelf price**, with a clear note when fees flip the result for a single-item order. (Debatable call. Most quick-commerce orders are multi-item, so fees spread out.)
+Items are ranked by **shelf price**. When fees would flip the winner for a one-item order, a note says so.
 
-**Basket** (v2):
-- Single-platform baskets: total = Σ items + fees, and flag missing items ("Careem: 2 items unavailable").
-- Best split across ≤ 2 platforms. With 5 platforms that's 15 subsets. For each, put every item on the cheaper platform in the subset, then add each used platform's fees. Fee thresholds depend on each platform's subtotal, so finish with a small local-search pass. That's trivial compute at this scale.
-- Show the saving against her default platform. If the best split saves < AED 5, recommend one platform. Two deliveries aren't worth it.
-
-**Memberships** are stored per user and change which fee schedule applies. Wrong membership data means wrong answers, so the settings screen asks for it up front.
+**Basket (v2):**
+- Totals per platform, including fees, with missing items flagged.
+- Best split across at most 2 platforms. With 3 platforms that's 3 pairs to brute-force, plus a local-search pass for fee thresholds.
+- If splitting saves less than AED 5, recommend one platform.
 
 ---
 
-## 8. Data model (Postgres)
+## 8. Data model (SQLite)
+
+IDs are app-generated ULIDs (`TEXT`). Timestamps are ISO-8601 `TEXT`. Booleans are `INTEGER` 0/1.
 
 ```sql
 create table platforms (
-  id text primary key,                 -- 'noon_minutes', ...
+  id text primary key,                 -- 'noon_minutes' | 'careem_quik' | 'amazon_now'
   name text not null,
-  enabled boolean not null default true
+  enabled integer not null default 1
 );
 
 create table addresses (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null,
+  id text primary key,
   label text not null,                 -- 'home'
-  lat double precision not null,
-  lng double precision not null,
+  lat real not null,
+  lng real not null,
   zone_id text not null
 );
 
 create table memberships (
-  user_id uuid not null,
-  platform_id text not null references platforms(id),
-  tier text not null,                  -- 'prime', 'noon_one', ...
-  primary key (user_id, platform_id)
+  platform_id text primary key references platforms(id),
+  tier text not null                   -- 'prime' | 'noon_one' | 'careem_plus'
 );
 
 create table products (                -- canonical, cross-platform
-  id uuid primary key default gen_random_uuid(),
+  id text primary key,
   brand text,
   name text not null,
-  variant text,
-  size_value numeric,
+  variant text,                        -- 'full fat', 'low fat', 'long life' ...
+  size_value real,
   size_unit text check (size_unit in ('ml','g','pc')),
-  pack_count int not null default 1,
+  pack_count integer not null default 1,
   gtin text,
   category text
 );
 
 create table listings (                -- one per platform SKU
-  id uuid primary key default gen_random_uuid(),
+  id text primary key,
   platform_id text not null references platforms(id),
   platform_sku text not null,
   title text not null,
   brand_raw text,
   size_raw text,
+  is_bundle integer not null default 0,
   image_url text,
   deep_link text,
-  product_id uuid references products(id),
+  product_id text references products(id),
   match_confidence real,
-  match_method text check (match_method in ('gtin','rule','llm','human')),
+  match_method text check (match_method in ('gtin','rule','human')),
   unique (platform_id, platform_sku)
 );
-create index on listings using gin (title gin_trgm_ops);  -- requires pg_trgm
 
-create table price_snapshots (         -- append-only history
-  listing_id uuid not null references listings(id),
+-- substring title search (SQLite >= 3.34); typo tolerance is app-side
+create virtual table listings_fts using fts5(title, content='listings', tokenize='trigram');
+
+create table price_snapshots (         -- append-only
+  listing_id text not null references listings(id),
   zone_id text not null,
-  price_fils int not null,
-  was_price_fils int,
+  price_fils integer not null,
+  was_price_fils integer,
   promo_text text,
-  in_stock boolean not null,
-  source text not null,
-  fetched_at timestamptz not null default now(),
-  quarantined boolean not null default false   -- sanity-check failures
+  in_stock integer not null,
+  source text not null,                -- 'web' | 'web_logged_in' | 'manual' | ...
+  fetched_at text not null,
+  quarantined integer not null default 0
 );
-create index on price_snapshots (listing_id, zone_id, fetched_at desc);
+create index price_snapshots_latest on price_snapshots (listing_id, zone_id, fetched_at desc);
 
 create table fee_schedules (
   platform_id text not null references platforms(id),
   zone_id text not null,
   membership text,
-  min_order_fils int,
-  delivery_fee_fils int not null,
-  free_delivery_threshold_fils int,
-  small_order_fee_fils int,
-  small_order_threshold_fils int,
-  service_fee_pct numeric,
-  fetched_at timestamptz not null default now()
+  min_order_fils integer,
+  delivery_fee_fils integer not null,
+  free_delivery_threshold_fils integer,
+  small_order_fee_fils integer,
+  small_order_threshold_fils integer,
+  service_fee_pct real,
+  checked_at text not null
 );
 
 create table watchlist (
-  user_id uuid not null,
-  product_id uuid not null references products(id),
-  target_price_fils int,
-  primary key (user_id, product_id)
+  product_id text primary key references products(id),
+  target_price_fils integer
 );
 
 create table search_log (
-  id bigserial primary key,
-  user_id uuid,
+  id integer primary key,
   q text not null,
-  result_count int,
-  platform_status jsonb,               -- {platform: status, latencyMs}
-  created_at timestamptz not null default now()
+  result_count integer,
+  platform_status text,                -- JSON: {platform: {status, latencyMs}}
+  created_at text not null
 );
 
 create table adapter_runs (
-  id bigserial primary key,
+  id integer primary key,
   platform_id text not null,
-  kind text not null,                  -- 'search' | 'lookup' | 'fees' | 'canary'
+  kind text not null,                  -- 'search' | 'lookup' | 'canary'
   status text not null,
-  listings int,
-  duration_ms int,
+  listings integer,
+  duration_ms integer,
   error text,
-  created_at timestamptz not null default now()
+  created_at text not null
 );
 ```
 
@@ -379,145 +389,145 @@ create table adapter_runs (
 
 | Method | Path | Purpose |
 |---|---|---|
-| GET | `/api/search?q=&addressId=` | SSE stream of per-platform results plus final ranking |
-| GET | `/api/products/:id` | Canonical product with all listings and latest prices |
+| GET | `/api/search?q=` | Stream of per-platform results (SSE) plus final ranking |
+| GET | `/api/products/:id` | Canonical product, its listings, latest prices |
 | GET/POST/DELETE | `/api/watchlist` | Manage usual items |
-| POST | `/api/basket/compare` | `{ addressId, items: [{productId, qty}] }` → per-platform totals and best split |
+| POST | `/api/basket/compare` | v2: `{ items: [{productId, qty}] }` → per-platform totals and best split |
 | GET | `/api/platforms/health` | Last run status per adapter |
-| POST | `/api/admin/matches/:listingId` | Human confirm/reject of a match (you, not mom) |
+| GET/POST | `/api/admin/review` | Human match confirm/reject (you) |
+| POST | `/api/admin/manual-price` | Manual price entry (Careem option B / Amazon fallback) |
 
 Example final event of `/api/search`:
 ```json
 {
   "query": "almarai milk 1l",
+  "compared": ["noon_minutes", "amazon_now"],
+  "notCompared": ["careem_quik"],
   "products": [{
-    "productId": "…",
-    "name": "Almarai Full Fat Fresh Milk 1L",
+    "productId": "01J…",
+    "name": "Almarai Fresh Milk Full Fat 1L",
     "offers": [
-      { "platform": "careem_quik",  "priceFils": 625, "inStock": true,  "ageMin": 40,  "deepLink": "…" },
-      { "platform": "noon_minutes", "priceFils": 650, "inStock": true,  "ageMin": 95,  "deepLink": "…" },
-      { "platform": "amazon_now",   "priceFils": 650, "inStock": false, "ageMin": 30,  "deepLink": "…" }
+      { "platform": "noon_minutes", "priceFils": 735, "inStock": true, "ageMin": 40, "source": "web", "deepLink": "https://minutes.noon.com/uae-en/now-product/Z5EA09043DDB8EB12D99FZ-1/" },
+      { "platform": "amazon_now",   "priceFils": 750, "inStock": true, "ageMin": 300, "source": "web_logged_in", "deepLink": "…" }
     ],
-    "cheapest": "careem_quik"
+    "cheapest": "noon_minutes"
   }],
-  "alternatives": [ { "name": "Al Rawabi Full Cream 1L", "bestPriceFils": 595, "platform": "noon_minutes" } ],
-  "platformStatus": {
-    "deliveroo_hop": "timeout",
-    "talabat_mart": "ok"
-  }
+  "alternatives": [{ "name": "MLK Fresh Milk Full Fat 1L", "bestPriceFils": 625, "platform": "noon_minutes" }],
+  "platformStatus": { "noon_minutes": "ok", "amazon_now": "ok", "careem_quik": "disabled" }
 }
 ```
+(The Noon prices are real Phase 0 samples. The Amazon price is illustrative.)
 
 ---
 
 ## 10. Reliability & operations
 
-- **Contract tests** run every adapter's parser against recorded fixtures in CI. A parser change that breaks a fixture fails the build.
-- **Daily canary:** search 3 known items on every platform and assert ≥ 1 listing with a plausible price (AED 1–200). If it fails, alert you (Telegram/email/push). Mom never sees stack traces.
-- **Sanity quarantine:** if a price moves more than 60% from the last snapshot, or falls outside the plausible range, it is stored but `quarantined`, and never shown as "cheapest". This catches parser bugs like 6.50 read as 650.
-- **Staleness rules:** under 4 h shows normally. 4–24 h is shown greyed with its age. Over 24 h isn't ranked.
-- **Rate budget:** a hard ceiling per platform per day, enforced in the adapter base class.
-- **Secrets:** any platform tokens are encrypted and stored outside the repo. Use separate accounts for collection, **not mom's main accounts** (R2).
+- **Contract tests:** every parser runs against recorded HTML fixtures in CI.
+- **Daily canary:** 3 known items per enabled platform. Each must return at least one listing priced between AED 1 and 200. If not, a **Telegram bot** messages you. Mom never sees errors.
+- **Sanity quarantine:** a price move over 60% versus the last snapshot, or a price outside the plausible range, is stored with `quarantined = 1` and never ranked.
+- **Staleness:**
+  - scraped prices under 4 h show normally;
+  - 4–24 h show greyed;
+  - over 24 h aren't ranked;
+  - manual prices: under 7 days show normally with an "entered by hand" badge; older than that aren't ranked.
+- **Accounts:** the throwaway Amazon account's session is a Playwright persistent profile on the home machine, outside the repo. **Mom's accounts are never automated.**
+- **Backups:** nightly copy of the SQLite file (`.backup`) to a second disk or a free cloud drive.
 
 ---
 
-## 11. Phased plan with gates
+## 11. Phases (details and tickets in [BUILD_PLAN.md](./BUILD_PLAN.md))
 
-### Phase 0 — Feasibility + value check (1–2 days). **Do this before writing product code.**
-1. **Manual price survey:** 20 of mom's real items × each platform, at her address, today. Record shelf price, fees, stock. Calculate the actual weekly saving. **Gate:** if the realistic saving is under ~AED 15–20/week, stop or keep it as a hobby, knowingly.
-2. **Access check per platform.** Fill in this table:
-
-| Platform | Web storefront? | Prices visible without login? | Needs address? | Anti-bot seen? | SKU/batch lookup? | Chosen tier |
-|---|---|---|---|---|---|---|
-| Noon Minutes | ? | ? | ? | ? | ? | ? |
-| Careem Quik | ? (likely app-only, **UNVERIFIED**) | ? | ? | ? | ? | ? |
-| Amazon Now | ? | ? | ? | ? | ? | ? |
-| Deliveroo HOP | ? | ? | ? | ? | ? | ? |
-| Talabat Mart | ? | ? | ? | ? | ? | ? |
-
-3. Capture 3 real responses per platform as fixtures.
-
-**Gate:** if fewer than 3 platforms can be reached through tiers 1–3, decide explicitly between a paid vendor feed (tier 2), private app APIs (tier 4, accepting the risk) or a smaller scope.
-
-### Phase 1 — Skeleton on fake data (3–4 days)
-- Repo scaffold (§12), `core` types, normalizer and matcher with unit tests.
-- Fixture adapters for all platforms.
-- Search API with SSE, plus the PWA: one search box, results card, platform status chips.
-- **Put it in mom's hands with fake data.** Validate the UX before paying the scraping cost.
-
-### Phase 2 — First real adapters (3–5 days)
-- The 2 easiest platforms from Phase 0, Postgres persistence, snapshots, staleness and quarantine rules.
-
-### Phase 3 — Watchlist + fees (3–4 days)
-- Import her usual items, human-confirm matches, scheduled refresh (2–3×/day), fee schedules, memberships.
-
-### Phase 4 — Remaining adapters + v2 features
-- The other platforms, basket compare, price-drop alerts, WhatsApp interface, voice input.
-
-### Phase 5 — Only if this becomes a business
-- Stop scraping, pursue data partnerships or licensed feeds, legal review, multi-user auth and privacy (UAE PDPL).
-
-Time estimates assume one developer working part-time with AI assistance, and they are guesses. Phase 0 results will move them.
+| Phase | What | Gate to pass |
+|---|---|---|
+| **0** | Web probe ✅ · manual checks + value survey ⏳ (PHASE0 §4) | Weekly saving ≥ AED 15 · Careem decision made · Amazon eligibility known |
+| **1** | Scaffold + core logic + fixture adapters + PWA on fake data | Mom uses the fake-data version and gets it without help |
+| **2** | Real Noon adapter, SQLite persistence, staleness, quarantine | 7 days of canaries green from the home machine |
+| **3** | Watchlist import + review screen, scheduler, fees, memberships, Amazon (if eligible) | MVP definition of done (BUILD_PLAN) |
+| **4** | Basket compare, price-drop alerts, Careem (if a decision allows it) | Success metrics (BUILD_PLAN) |
 
 ---
 
-## 12. Repo layout & stack
+## 12. Repo layout & stack (new dedicated repo)
 
 ```
 apps/
-  web/            Next.js PWA (installable on her home screen)
-  server/         Hono/Node: API, orchestrator, scheduler (long-running)
+  web/              Next.js PWA (static export), served by the server
+  server/           Node + Hono: API, orchestrator, scheduler
 packages/
-  core/           types, money (fils), normalizer, matcher, pricing engine — pure, no I/O
+  core/             types, money (fils), normalizer, matcher, pricing — pure, no I/O
   adapters/
     noon-minutes/   { adapter.ts, parser.ts, fixtures/ }
-    careem-quik/
     amazon-now/
-    deliveroo-hop/
-    talabat-mart/
-    fixture/        fake adapter for local dev and demos
-  db/             SQL migrations, typed queries
+    careem-quik/    manual-entry adapter (reads manual prices)
+    fixture/        fake adapter for dev and demos
+  db/               SQLite migrations, typed queries
+docs/               these planning docs
+docker-compose.yml  server + tailscale sidecar
 ```
 
-| Concern | Choice | Why |
+| Concern | Choice | Cost |
 |---|---|---|
-| Language | TypeScript everywhere | One language across adapters, server and UI. Playwright is first-class. |
-| Server | Node + Hono | Small, fast, easy SSE |
-| DB | Postgres (Supabase is fine) + `pg_trgm` | Fuzzy matching in-DB, append-only snapshots |
-| Jobs | `pg-boss` (Postgres-backed queue) | No extra infra |
-| Scraping | Playwright (tier 3), plain `fetch` where JSON endpoints exist | Use the lightest tool that works per platform |
-| Hosting | Small VPS **or** a home mini-PC behind Cloudflare Tunnel. PWA optionally on Vercel. | Collectors need a long-running process. A residential IP helps (§2). |
-| LLM (optional) | A small, cheap Claude model for match adjudication and messy queries | Only on cache misses, decisions cached |
-| Monitoring | `adapter_runs` table + canary alerts | Enough for one user |
+| Language | TypeScript everywhere | $0 |
+| Server | Node 20+ + Hono | $0 |
+| DB | SQLite (`better-sqlite3`) + FTS5 trigram | $0 |
+| Jobs | In-process scheduler (`croner`) + `adapter_runs` table | $0 |
+| Scraping | Playwright (Chromium) | $0 |
+| Hosting | Home machine + Docker + Tailscale Funnel | $0 (electricity) |
+| Alerts | Telegram bot | $0 |
+| LLM | None | $0 |
+| Dev-only tools | Firecrawl / browser agents for probing and debugging | Free tier credits only |
 
 ---
 
-## 13. UX for mom (non-negotiables)
+## 13. UX for mom
 
-- One search box. Voice input (Web Speech API). Big text.
-- Result card: **"Cheapest: Careem Quik — AED 6.25"** with one big "Open in Careem" button.
-- Other platforms listed below, sorted by price, each showing stock and price age.
-- Platforms that failed are shown as **"couldn't check"**, never hidden.
-- "Cheaper alternative" section with unit price ("AED 0.60 / 100 ml").
-- No login screens, no settings she has to manage. You set up address and memberships once.
-
----
-
-## 14. Open questions (answer these before Phase 1)
-
-1. Which emirate and area is her delivery address? (Dark-store coverage and zone setup.)
-2. Which memberships does she have (Prime, noon One, Careem Plus, Talabat Pro, Deliveroo Plus)?
-3. Personal tool forever, or might it become a product? This changes the data strategy and legal posture (R2).
-4. What language should the UI use?
-5. Does she mostly do one-item top-ups or weekly baskets? Baskets are where fees and real savings live.
-6. Add Talabat Mart now? InstaShop / Carrefour / Lulu later?
-7. Budget for a paid data feed if scraping turns out impractical for one or more platforms?
+- One search box, voice input (Web Speech API), large text.
+- **"Cheapest: Noon Minutes — AED 7.35"** with one big "Open in Noon" button.
+- Other platforms underneath, each with stock and price age. Manual prices carry an "entered by hand" badge.
+- Footer that's always visible: "Compared: Noon Minutes, Amazon Now · Not compared: Careem Quik".
+- A "cheaper alternative" section with unit price.
+- No logins or settings for her. You set things up once.
 
 ---
 
-### Sources consulted for the facts above
-- Amazon Now UAE launch, 15-min delivery, Prime free delivery over AED 25 / ~AED 6 fee: [Gulf Business](https://gulfbusiness.com/en/2025/retail/amazon-launches-amazon-now-service-across-uae/), [Entrepreneur ME](https://mena.entrepreneur.com/growth-strategies/amazon-launches-amazon-now-in-the-uae-promising-delivery/498573)
-- PA-API 5 deprecation (Apr 30, 2026) and retirement (May 15, 2026), Creators API successor: [Amazon Associates — PA-API v5 deprecation](https://affiliate-program.amazon.com/creatorsapi/docs/en-us/paapiv5-deprecation)
-- UAE quick-commerce landscape (Noon Minutes, Careem Quik, Talabat Mart, Deliveroo HOP): [Real Estate Club Dubai — grocery delivery 2026](https://realestateclubdubai.com/blog/dubai-life/grocery-delivery-in-dubai-2026-comparing-every-app-prices-speed-quality)
-- Deliveroo HOP (Choithrams partnership), DoorDash ownership: [Arabian Business](https://www.arabianbusiness.com/gcc/uae/deliveroo-hop-uae), [Arabian Business — 10 years](https://www.arabianbusiness.com/abnews/deliveroo-marks-10-years-in-the-uae-a-decade-of-growth-innovation-and-local-impact)
-- Existence of commercial UAE quick-commerce scraping/data vendors (quality and pricing not assessed): [example vendor page](https://www.actowizsolutions.com/quick-commerce-data-scraping-services-uae.php)
+## 14. Inputs still needed (before Phase 1)
+
+1. Her memberships: Prime / noon One / Careem Plus / none.
+2. UI language: English / Arabic / other.
+3. Mostly one-item top-ups or weekly baskets?
+4. A spare machine at home that can stay on (laptop, Pi, mini-PC)?
+5. Her usual items: screenshots of recent orders are enough.
+6. The PHASE0 §4 manual checks and value survey.
+7. **Careem decision:** option A, B or C (PHASE0 §3.3).
+
+---
+
+## 15. Decisions
+
+| # | Decision | Reason |
+|---|---|---|
+| D1 | Mom-only, no multi-user | Your call. It keeps auth, privacy and scale out of scope. |
+| D2 | $0 running cost, nothing paid | Your call. Rules out vendor feeds, paid LLMs, paid browser agents and paid hosting. |
+| D3 | Platforms: Noon Minutes, Careem Quik, Amazon Now | Your call. Talabat Mart and Deliveroo HOP excluded; the UI says which apps were compared (R8). |
+| D4 | Dubai only | Your answer. One zone to start with. |
+| D5 | New dedicated repo at build start | The current repo is an unrelated project with its own CI. |
+| D6 | Watchlist-first, human-confirmed matches | Faster, safer and more accurate than live matching on every search (§3). |
+| D7 | Home machine + Tailscale Funnel | Free. A Dubai residential IP passes Noon's Cloudflare where a cloud IP didn't. Cloudflare Tunnel/Access needs a paid domain. |
+| D8 | SQLite instead of Postgres/Supabase/Redis | One user, one process. No free-tier pausing. One-file backups. |
+| D9 | No LLM in the runtime path | Costs money, and isn't needed once matches are human-confirmed. |
+| D10 | Paid browser agents (Jev etc.) are dev/debug only | Cost grows with use and results aren't repeatable (§4, data sources table). |
+| D11 | Respect robots.txt. Noon: HTML only, never `/_svc/` | The most defensible position under R2. |
+| D12 | Never automate mom's real accounts | Losing her Prime/Careem account costs real money. |
+| D13 | Fee schedules entered by hand, re-checked monthly | They change rarely, and scraping checkout pages isn't worth it. |
+| D14 | Telegram for operator alerts | Free and instant. Mom never sees errors. |
+| D15 | Careem Quik | **Pending.** Recommended: drop from v1 (option C) unless the survey shows it often wins. |
+
+---
+
+### Sources
+- Amazon Now launch, fees, coverage: [About Amazon](https://www.aboutamazon.com/news/innovation/amazon-now-delivery-uae), [Gulf Business](https://gulfbusiness.com/en/2025/retail/amazon-launches-amazon-now-service-across-uae/), [Entrepreneur ME](https://mena.entrepreneur.com/growth-strategies/amazon-launches-amazon-now-in-the-uae-promising-delivery/498573)
+- PA-API 5 deprecation (2026-04-30) and retirement (2026-05-15): [Amazon Associates](https://affiliate-program.amazon.com/creatorsapi/docs/en-us/paapiv5-deprecation)
+- UAE quick-commerce landscape: [Real Estate Club Dubai](https://realestateclubdubai.com/blog/dubai-life/grocery-delivery-in-dubai-2026-comparing-every-app-prices-speed-quality)
+- Careem Quik is ordered in the app: [Gulf Business](https://gulfbusiness.com/careem-launches-15-minute-grocery-delivery-service-in-dubai)
+- Jev browser agent: [Hermes AI](https://hermes-ai.net/news/browser-use-s-jev-ultrafast-cuts-browser-agent-costs-90-with-indexed-dom-actions/)
+- Platform probe evidence: [PHASE0_FINDINGS.md](./PHASE0_FINDINGS.md)
